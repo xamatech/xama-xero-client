@@ -1,11 +1,6 @@
 package com.xama
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.PropertyNamingStrategy
-import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.google.api.client.auth.oauth.OAuthHmacSigner
-import org.apache.http.HttpRequest
-import org.apache.http.HttpRequestInterceptor
+import com.google.api.client.util.StringUtils
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -19,27 +14,12 @@ import java.net.URLEncoder
 import java.security.SecureRandom
 import java.util.*
 import java.util.concurrent.CompletableFuture
-import org.zalando.riptide.OriginalStackTracePlugin
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.zalando.riptide.Http
-import java.util.concurrent.TimeUnit
-import org.springframework.scheduling.concurrent.ConcurrentTaskExecutor
-import org.apache.http.impl.client.HttpClientBuilder
-import org.slf4j.LoggerFactory
 import org.springframework.core.io.ByteArrayResource
-import org.springframework.http.converter.FormHttpMessageConverter
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder
 import org.springframework.util.LinkedMultiValueMap
-import org.springframework.util.MultiValueMap
-import org.springframework.web.multipart.MultipartFile
-import org.zalando.logbook.Logbook
-import org.zalando.logbook.RawRequestFilter
-import org.zalando.logbook.StreamHttpLogWriter
-import org.zalando.logbook.httpclient.LogbookHttpRequestInterceptor
-import org.zalando.riptide.httpclient.RestAsyncClientHttpRequestFactory
-import java.io.File
-import java.net.URI
 import java.net.URL
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 
 private val RANDOM = SecureRandom()
@@ -52,7 +32,7 @@ fun computeTimestamp(): String = (System.currentTimeMillis() / 1000L).toString()
  * see https://developer.xero.com/documentation/files-api/files
 */
 
-data class UserDto(val id: UUID, val name: String?, val firstNam: String?, val lastName: String?, val fullName: String?)
+data class UserDto(val id: UUID, val name: String?, val firstName: String?, val lastName: String?, val fullName: String?)
 data class FileDto(val id: UUID, val folderId: UUID?, val size: Int, val createdDateUtc: String, val updatedDateUtc: String, val user: UserDto?)
 data class GetFilesResponseDto(val totalCount: Int, val page: Int, val perPage: Int, val items: List<FileDto>)
 
@@ -73,7 +53,9 @@ data class Config(val consumerKey: String,
 )
 
 
-
+internal class ExtendedResource(val name: String, byteArray: ByteArray) : ByteArrayResource(byteArray) {
+    override fun getFilename(): String = name
+}
 
 
 class FilesClient (val http: Http, val config: Config){
@@ -84,7 +66,7 @@ class FilesClient (val http: Http, val config: Config){
     }
 
 
-
+    //Bindings.on(HttpStatus.Series.SUCCESSFUL).call({ response: ClientHttpResponse, reader: MessageReader -> println(response.body.bufferedReader().use { it.readText() }) }),
 
     fun getFiles(): CompletableFuture<GetFilesResponseDto> {
         val capture = Capture.empty<GetFilesResponseDto>()
@@ -92,14 +74,13 @@ class FilesClient (val http: Http, val config: Config){
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 // .ifModifiedSince() TODO
-                //.header(HttpHeaders.USER_AGENT, config.userAgent)
-                .headers(headers(
+                .header(HttpHeaders.USER_AGENT, config.userAgent)
+                .headers(oauthHeaders(
                         httpMethod = HttpMethod.GET,
                         requestPath = BASE_URL
                         // TODO query params
                 ))
                 .dispatch(Navigators.series(),
-                       // Bindings.on(HttpStatus.Series.SUCCESSFUL).call({ response: ClientHttpResponse, reader: MessageReader -> println(response.body.bufferedReader().use { it.readText() }) }),
                         Bindings.on(HttpStatus.Series.SUCCESSFUL).call(GetFilesResponseDto::class.java, capture),
                         Bindings.anySeries().call(problemHandling(call { p -> handleProblem(p) }))
                 )
@@ -109,34 +90,23 @@ class FilesClient (val http: Http, val config: Config){
     }
 
 
-    class ExtendedResource(byteArray: ByteArray) : ByteArrayResource(byteArray) {
-       override fun getFilename(): String = "test.jpg"
-    }
-
-    fun postFile(fileUrl: URL): CompletableFuture<FileDto> {
+    fun postFile(fileName: String, fileUrl: URL): CompletableFuture<FileDto> {
 
         val multiValueMap = LinkedMultiValueMap<String, Any>()
-        multiValueMap["testben.jpg"] = ExtendedResource (fileUrl.readBytes()) // TODO
+        multiValueMap[fileName] =  ExtendedResource(fileName, fileUrl.readBytes())
 
         val capture = Capture.empty<FileDto>()
         val future = http.post(BASE_URL)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 // .ifModifiedSince() TODO
-                //.header(HttpHeaders.USER_AGENT, config.userAgent)
-                .headers(headers(
+                .header(HttpHeaders.USER_AGENT, config.userAgent)
+                .headers(oauthHeaders(
                         httpMethod = HttpMethod.POST,
-                        requestPath = BASE_URL,
-                        parameters = listOf(
-                          //      Pair("filename", "test.jpg"),
-                          //      Pair("name", "file")
-                        )
-                       // parameters = listOf(Pair(HttpHeaders.CONTENT_TYPE, MediaType.MULTIPART_FORM_DATA_VALUE))
-                        // TODO query params
+                        requestPath = BASE_URL
                 ))
                 .body(multiValueMap)
                 .dispatch(Navigators.series(),
-                        //Bindings.on(HttpStatus.Series.SUCCESSFUL).call({ response: ClientHttpResponse, reader: MessageReader -> println(response.body.bufferedReader().use { it.readText() }) }),
                         Bindings.on(HttpStatus.Series.SUCCESSFUL).call(FileDto::class.java, capture),
                         Bindings.anySeries().call(problemHandling(call { p -> handleProblem(p) }))
                 )
@@ -150,13 +120,10 @@ class FilesClient (val http: Http, val config: Config){
     /**
      * see https://oauth.net/core/1.0a/#signing_process
      */
-    fun headers(httpMethod: HttpMethod,
-                requestPath: String,
-                parameters: List<Pair<String, String>> = listOf()
+    fun oauthHeaders(httpMethod: HttpMethod,
+                     requestPath: String,
+                     parameters: List<Pair<String, String>> = listOf()
     ): HttpHeaders {
-
-        val before = System.currentTimeMillis()
-
         val credentials = config.credentialsProvider()
         val oauthHeaders = oauthHeaders(credentials = credentials)
 
@@ -174,36 +141,30 @@ class FilesClient (val http: Http, val config: Config){
                 normalisedParams = normalisedParams
         )
 
-
-        val headers = HttpHeaders()
-
-        val preparedOAuthParams = oauthHeaders
+        val joinedOAuthHeaderParams = oauthHeaders
                 .joinToString(
                         transform = {p -> "${p.first}=\"${URLEncoder.encode(p.second, ENCODING)}\""},
                         separator = ", "
                 )
 
-        headers.add(
+        return HttpHeaders().apply {
+            add(
                 HttpHeaders.AUTHORIZATION,
-                "OAuth $preparedOAuthParams, oauth_signature=\"${URLEncoder.encode(signature, ENCODING)}\""
-        )
-
-
-        val after = System.currentTimeMillis()
-        println("header prep---> ${after - before}")
-        println("header --> $headers")
-
-        return headers
+                "OAuth $joinedOAuthHeaderParams, oauth_signature=\"${URLEncoder.encode(signature, ENCODING)}\""
+            )
+        }
     }
+
 
     private fun oauthHeaders(credentials: Credentials) = listOf(
             "oauth_consumer_key" to config.consumerKey,
             "oauth_nonce" to nonce(),
             "oauth_timestamp" to computeTimestamp(),
-            "oauth_signature_method" to "HMAC-SHA1", // config.signer.signatureMethod,
+            "oauth_signature_method" to "HMAC-SHA1", // config.signer.signatureMethod, // TODO
             "oauth_token" to credentials.token,
-            "oauth_version" to "1.0" // TODO
+            "oauth_version" to "1.0"
     )
+
 
     private fun computeSignature(credentials: Credentials,
                                  httpMethod: HttpMethod,
@@ -224,15 +185,24 @@ class FilesClient (val http: Http, val config: Config){
 
         val signatureString = signatureStringBuilder.toString()
 
-        println("signatureString: $signatureString")
-
-        val signer = OAuthHmacSigner()
-        signer.tokenSharedSecret = credentials.tokenSecret
-        signer.clientSharedSecret = config.consumerSecret
-
-        return  signer.computeSignature(signatureString)
+        return hmacSha1(signatureString, credentials, config) // TODO
     }
 
+
+    fun hmacSha1(signatureBaseString: String, credentials: Credentials, config: Config): String {
+
+        val keyBuilder = StringBuilder().apply {
+            append(URLEncoder.encode(config.consumerSecret, ENCODING))
+            append('&')
+            append(URLEncoder.encode(credentials.tokenSecret, ENCODING))
+        }
+
+        val secretKey = SecretKeySpec(keyBuilder.toString().toByteArray(Charsets.UTF_8), "HmacSHA1")
+        val mac = Mac.getInstance("HmacSHA1")
+        mac.init(secretKey)
+
+        return Base64.getEncoder().encodeToString(mac.doFinal(StringUtils.getBytesUtf8(signatureBaseString)))
+    }
 
 
     private fun handleProblem(response: ClientHttpResponse) {
@@ -245,72 +215,4 @@ class FilesClient (val http: Http, val config: Config){
                 response.statusCode
         )
     }
-}
-
-fun main(args: Array<String>): Unit {
-
-
-    val logbook = Logbook.builder()
-            .clearBodyFilters()
-            .clearHeaderFilters()
-            .clearRawRequestFilters()
-            .rawRequestFilter(RawRequestFilter.none())
-            .clearRawResponseFilters()
-            .clearRequestFilters()
-            .writer(StreamHttpLogWriter(System.err))
-            .build()
-
-    val httpClient = HttpClientBuilder.create()
-            // TODO configure client here
-            .addInterceptorFirst(LogbookHttpRequestInterceptor(logbook))
-            .build()
-
-    val executor = ConcurrentTaskExecutor()
-
-
-    val objectMapper: ObjectMapper = Jackson2ObjectMapperBuilder().modulesToInstall(
-            KotlinModule())
-            .createXmlMapper(false)
-            .propertyNamingStrategy(PropertyNamingStrategy.UPPER_CAMEL_CASE)
-            .build()
-
-
-    val http = Http.builder()
-            //.requestFactory(HttpComponentsAsyncClientHttpRequestFactory())
-            .requestFactory(RestAsyncClientHttpRequestFactory(httpClient, executor))
-            .converter(MappingJackson2HttpMessageConverter(objectMapper))
-            .converter(FormHttpMessageConverter())
-            .plugin(OriginalStackTracePlugin())
-            .build()
-
-
-
-    val config = Config(
-            appType = AppType.PUBLIC,
-            userAgent = "",
-            consumerKey = "",
-            consumerSecret = "",
-            credentialsProvider = {
-                Credentials(
-                        token = "",
-                        tokenSecret = ""
-                )
-            }
-    )
-
-
-
-    val client = FilesClient(http = http, config = config)
-/*
-    val before1 = System.currentTimeMillis()
-    var future1 = client.getFiles()
-    var result1 = future1.get(10L, TimeUnit.SECONDS);
-    println(System.currentTimeMillis() - before1)
-    println(result1)
-
-    println("--------")
-*/
-    val future = client.postFile(URL("file:///tmp/test_image.jpeg"))
-    val result = future.get(60L, TimeUnit.SECONDS);
-    println(result)
 }
