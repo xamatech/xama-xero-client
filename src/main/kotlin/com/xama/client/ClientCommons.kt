@@ -1,10 +1,7 @@
 package com.xama.client
 
-import org.springframework.core.io.ByteArrayResource
-import org.springframework.http.client.ClientHttpResponse
+import org.springframework.http.HttpStatus
 import java.util.*
-
-
 
 enum class AppType { PUBLIC, PRIVATE, PARTNER }
 
@@ -19,18 +16,8 @@ data class Config(val consumerKey: String,
 //                  "PrivateKeyPassword" :  ""
 )
 
-
-internal class ExtendedResource(val name: String, byteArray: ByteArray) : ByteArrayResource(byteArray) {
-    override fun getFilename(): String = name
-}
-
-
-internal fun handleProblem(response: ClientHttpResponse) {
-    val body = response.body.bufferedReader().use { it.readText() }
-    // TOOD
-    throw Exception(
-            response.statusText + " " +
-                    body + " " +
-                    response.statusCode
-    )
+class CustomHttpException(val title: String, val detail: String, val status: HttpStatus)  : RuntimeException(){
+    override fun toString(): String {
+        return "CustomHttpException(title='$title', detail='$detail', status=$status)"
+    }
 }
