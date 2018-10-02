@@ -91,13 +91,11 @@ class Associations private constructor() {
             return http.get(requestUrl)
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .accept(MediaType.APPLICATION_JSON_UTF8)
-                    // .ifModifiedSince() TODO
                     .header(HttpHeaders.USER_AGENT, config.userAgent)
                     .headers(oauthHeaders(
                             config = config,
                             httpMethod = HttpMethod.GET,
                             requestPath = requestUrl
-                            // TODO query params
                     ))
                     .dispatch(Navigators.series(),
                             Bindings.on(HttpStatus.Series.SUCCESSFUL).call( Types.listOf(AssociationDto::class.java), capture),
@@ -118,13 +116,11 @@ class Associations private constructor() {
             return http.post(requestUrl, fileId)
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .accept(MediaType.APPLICATION_JSON_UTF8)
-                    // .ifModifiedSince() TODO
                     .header(HttpHeaders.USER_AGENT, config.userAgent)
                     .headers(oauthHeaders(
                             config = config,
                             httpMethod = HttpMethod.POST,
                             requestPath = requestUrl
-                            // TODO query params
                     ))
                     .body(CreateAssociationDto(objectId = objectId, objectGroup = objectGroup))
                     .dispatch(Navigators.series(),
@@ -141,13 +137,11 @@ class Associations private constructor() {
             return http.delete(requestUrl)
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .accept(MediaType.APPLICATION_JSON_UTF8)
-                    // .ifModifiedSince() TODO
                     .header(HttpHeaders.USER_AGENT, config.userAgent)
                     .headers(oauthHeaders(
                             config = config,
                             httpMethod = HttpMethod.DELETE,
                             requestPath = requestUrl
-                            // TODO query params
                     ))
                     .dispatch(Navigators.series(),
                             Bindings.on(HttpStatus.Series.SUCCESSFUL).call(Void::class.java, capture),
