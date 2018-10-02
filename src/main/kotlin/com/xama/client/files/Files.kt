@@ -1,5 +1,9 @@
-package com.xama.client
+package com.xama.client.files
 
+import com.xama.client.Config
+import com.xama.client.ExtendedResource
+import com.xama.client.handleProblem
+import com.xama.client.oauthHeaders
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus

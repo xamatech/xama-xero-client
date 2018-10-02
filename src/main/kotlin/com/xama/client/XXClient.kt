@@ -6,7 +6,7 @@ import java.util.*
 
 
 
-enum class AppType { PUBLIC, PRIVATE, PARTNER}
+enum class AppType { PUBLIC, PRIVATE, PARTNER }
 
 data class Credentials(val token: String, val tokenSecret: String)
 
