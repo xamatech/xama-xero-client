@@ -14,13 +14,9 @@ import java.util.*
 import java.util.concurrent.CompletableFuture
 
 /**
- * see https://developer.xero.com/documentation/files-api/files
+ * see https://developer.xero.com/documentation/files-api/associations
  */
-class Associations private constructor(){
-    data class UserDto(val id: UUID, val name: String?, val firstName: String?, val lastName: String?, val fullName: String?)
-    data class FileDto(val id: UUID, val folderId: UUID?, val size: Int, val createdDateUtc: String, val updatedDateUtc: String, val user: UserDto?)
-    data class GetFilesResponseDto(val totalCount: Int, val page: Int, val perPage: Int, val items: List<FileDto>)
-
+class Associations private constructor() {
 
     /**
      * see https://developer.xero.com/documentation/files-api/types#ObjectTypes
@@ -66,20 +62,17 @@ class Associations private constructor(){
      * see https://developer.xero.com/documentation/files-api/types#ObjectGroupes
      */
     enum class ObjectGroup {
-        Account, //	Accounts
-        BankTransaction, //	Bank Transactions
-        Contact, //	Contacts
-        CreditNote, //	Credit Notes
-        Invoice, //	Invoices
-        Item, //	Items
-        ManualJournal, //	Manual Journals
-        Overpayment, //	Overpayments
-        Payment, //	Payments
-        Payrun, //	Not yet available
-        Prepayment, //	Prepayments
-        PurchaseOrder, //	Not yet available
-        Receipt, //	Receipts
-        Reconciliation, //	Not yet available
+        ACCOUNT, //	Accounts
+        BANKTRANSACTION, //	Bank Transactions
+        CONTACT, //	Contacts
+        CREDITNOTE, //	Credit Notes
+        INVOICE, //	Invoices
+        ITEM, //	Items
+        MANUALJOURNAL, //	Manual Journals
+        OVERPAYMENT, //	Overpayments
+        PAYMENT, //	Payments
+        PREPAYMENT, //	Prepayments
+        RECEIPT //	Receipts
     }
 
 
