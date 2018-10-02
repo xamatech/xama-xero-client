@@ -87,9 +87,15 @@ class Associations private constructor() {
 
         //Bindings.on(HttpStatus.Series.SUCCESSFUL).call({ response: ClientHttpResponse, reader: MessageReader -> println(response.body.bufferedReader().use { it.readText() }) }),
 
-        fun getFileAssociations(fileId: UUID): CompletableFuture<List<AssociationDto>> {
+        fun getFileAssociations(fileId: UUID): CompletableFuture<List<AssociationDto>> = getAssociations(
+                "https://api.xero.com/files.xro/1.0/files/$fileId/associations"
+        )
+
+
+
+        private fun getAssociations(requestUrl: String): CompletableFuture<List<AssociationDto>> {
             val capture = Capture.empty<List<AssociationDto>>()
-            val future = http.get(BASE_URL, fileId)
+            return http.get(requestUrl)
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .accept(MediaType.APPLICATION_JSON_UTF8)
                     // .ifModifiedSince() TODO
@@ -97,7 +103,7 @@ class Associations private constructor() {
                     .headers(oauthHeaders(
                             config = config,
                             httpMethod = HttpMethod.GET,
-                            requestPath = "https://api.xero.com/files.xro/1.0/files/$fileId/associations"
+                            requestPath = requestUrl
                             // TODO query params
                     ))
                     .dispatch(Navigators.series(),
@@ -105,14 +111,17 @@ class Associations private constructor() {
                             Bindings.anySeries().call(ProblemRoute.problemHandling(Route.call { p -> handleProblem(p) }))
                     )
                     .thenApply(capture)
-
-            return future
         }
+
+
+        fun getObjectAssociations(objectId: UUID): CompletableFuture<List<AssociationDto>> = getAssociations(
+                "https://api.xero.com/files.xro/1.0/associations/$objectId"
+        )
 
 
         fun createFileAssociation(fileId: UUID, objectId: UUID, objectGroup: ObjectGroup): CompletableFuture<AssociationDto> {
             val capture = Capture.empty<AssociationDto>()
-            val future = http.post(BASE_URL, fileId)
+            return http.post(BASE_URL, fileId)
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .accept(MediaType.APPLICATION_JSON_UTF8)
                     // .ifModifiedSince() TODO
@@ -125,15 +134,10 @@ class Associations private constructor() {
                     ))
                     .body(CreateAssociationDto(objectId = objectId, objectGroup = objectGroup))
                     .dispatch(Navigators.series(),
-//                            Bindings.on(HttpStatus.Series.SUCCESSFUL).call({ response: ClientHttpResponse, reader: MessageReader -> println(response.body.bufferedReader().use { it.readText() }) }),
                             Bindings.on(HttpStatus.Series.SUCCESSFUL).call(AssociationDto::class.java, capture),
                             Bindings.anySeries().call(ProblemRoute.problemHandling(Route.call { p -> handleProblem(p) }))
                     )
                     .thenApply(capture)
-
-            return future
-
         }
     }
-
 }
