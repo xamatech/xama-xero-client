@@ -83,8 +83,9 @@ class Associations private constructor(){
     }
 
 
-    data class AssociationDto(val id: UUID, val objectId: UUID, val objectType: ObjectType, val objectGroup: ObjectGroup)
+    data class AssociationDto(val fileId: UUID, val objectId: UUID, val objectType: ObjectType, val objectGroup: ObjectGroup)
 
+    internal data class CreateAssociationDto(val objectId: UUID, val objectGroup: ObjectGroup)
 
     class Client (val http: Http, val config: Config){
         companion object {
@@ -110,9 +111,35 @@ class Associations private constructor(){
                             Bindings.on(HttpStatus.Series.SUCCESSFUL).call( Types.listOf(AssociationDto::class.java), capture),
                             Bindings.anySeries().call(ProblemRoute.problemHandling(Route.call { p -> handleProblem(p) }))
                     )
-                    .thenApply(capture);
+                    .thenApply(capture)
 
             return future
+        }
+
+
+        fun createFileAssociation(fileId: UUID, objectId: UUID, objectGroup: ObjectGroup): CompletableFuture<AssociationDto> {
+            val capture = Capture.empty<AssociationDto>()
+            val future = http.post(BASE_URL, fileId)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    // .ifModifiedSince() TODO
+                    .header(HttpHeaders.USER_AGENT, config.userAgent)
+                    .headers(oauthHeaders(
+                            config = config,
+                            httpMethod = HttpMethod.POST,
+                            requestPath = "https://api.xero.com/files.xro/1.0/files/$fileId/associations"
+                            // TODO query params
+                    ))
+                    .body(CreateAssociationDto(objectId = objectId, objectGroup = objectGroup))
+                    .dispatch(Navigators.series(),
+//                            Bindings.on(HttpStatus.Series.SUCCESSFUL).call({ response: ClientHttpResponse, reader: MessageReader -> println(response.body.bufferedReader().use { it.readText() }) }),
+                            Bindings.on(HttpStatus.Series.SUCCESSFUL).call(AssociationDto::class.java, capture),
+                            Bindings.anySeries().call(ProblemRoute.problemHandling(Route.call { p -> handleProblem(p) }))
+                    )
+                    .thenApply(capture)
+
+            return future
+
         }
     }
 
