@@ -36,7 +36,7 @@ class Files private constructor(){
 
         fun getFiles(): CompletableFuture<GetFilesResponseDto> {
             val capture = Capture.empty<GetFilesResponseDto>()
-            val future = http.get(BASE_URL)
+            return http.get(BASE_URL)
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .accept(MediaType.APPLICATION_JSON_UTF8)
                     // .ifModifiedSince() TODO
@@ -52,8 +52,27 @@ class Files private constructor(){
                             Bindings.anySeries().call(ProblemRoute.problemHandling(Route.call { p -> handleProblem(p) }))
                     )
                     .thenApply(capture);
+        }
 
-            return future
+
+        fun getFile(fileId: UUID): CompletableFuture<FileDto> {
+            val requestUrl = "$BASE_URL/$fileId"
+            val capture = Capture.empty<FileDto>()
+
+            return http.get(requestUrl)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.USER_AGENT, config.userAgent)
+                    .headers(oauthHeaders(
+                            config = config,
+                            httpMethod = HttpMethod.GET,
+                            requestPath = requestUrl
+                    ))
+                    .dispatch(Navigators.series(),
+                            Bindings.on(HttpStatus.Series.SUCCESSFUL).call(FileDto::class.java, capture),
+                            Bindings.anySeries().call(ProblemRoute.problemHandling(Route.call { p -> handleProblem(p) }))
+                    )
+                    .thenApply(capture);
         }
 
 
@@ -63,7 +82,7 @@ class Files private constructor(){
             multiValueMap[fileName] = ExtendedResource(fileName, fileUrl.readBytes())
 
             val capture = Capture.empty<FileDto>()
-            val future = http.post(BASE_URL)
+            return http.post(BASE_URL)
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .accept(MediaType.APPLICATION_JSON_UTF8)
                     // .ifModifiedSince() TODO
@@ -79,8 +98,6 @@ class Files private constructor(){
                             Bindings.anySeries().call(ProblemRoute.problemHandling(Route.call { p -> handleProblem(p) }))
                     )
                     .thenApply(capture);
-
-            return future
         }
     }
 
