@@ -80,17 +80,10 @@ class Associations private constructor() {
 
     internal data class CreateAssociationDto(val objectId: UUID, val objectGroup: ObjectGroup)
 
-    class Client (val http: Http, val config: Config){
-        companion object {
-            const val BASE_URL = "https://api.xero.com/files.xro/1.0/files/{fileId}/associations"
-        }
-
-        //Bindings.on(HttpStatus.Series.SUCCESSFUL).call({ response: ClientHttpResponse, reader: MessageReader -> println(response.body.bufferedReader().use { it.readText() }) }),
-
+    class Client (val http: Http, val config: Config) {
         fun getFileAssociations(fileId: UUID): CompletableFuture<List<AssociationDto>> = getAssociations(
                 "https://api.xero.com/files.xro/1.0/files/$fileId/associations"
         )
-
 
 
         private fun getAssociations(requestUrl: String): CompletableFuture<List<AssociationDto>> {
@@ -119,9 +112,10 @@ class Associations private constructor() {
         )
 
 
-        fun createFileAssociation(fileId: UUID, objectId: UUID, objectGroup: ObjectGroup): CompletableFuture<AssociationDto> {
+        fun createAssociation(fileId: UUID, objectId: UUID, objectGroup: ObjectGroup): CompletableFuture<AssociationDto> {
+            val requestUrl = "https://api.xero.com/files.xro/1.0/files/$fileId/associations"
             val capture = Capture.empty<AssociationDto>()
-            return http.post(BASE_URL, fileId)
+            return http.post(requestUrl, fileId)
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .accept(MediaType.APPLICATION_JSON_UTF8)
                     // .ifModifiedSince() TODO
@@ -129,12 +123,34 @@ class Associations private constructor() {
                     .headers(oauthHeaders(
                             config = config,
                             httpMethod = HttpMethod.POST,
-                            requestPath = "https://api.xero.com/files.xro/1.0/files/$fileId/associations"
+                            requestPath = requestUrl
                             // TODO query params
                     ))
                     .body(CreateAssociationDto(objectId = objectId, objectGroup = objectGroup))
                     .dispatch(Navigators.series(),
                             Bindings.on(HttpStatus.Series.SUCCESSFUL).call(AssociationDto::class.java, capture),
+                            Bindings.anySeries().call(ProblemRoute.problemHandling(Route.call { p -> handleProblem(p) }))
+                    )
+                    .thenApply(capture)
+        }
+
+
+        fun deleteAssociation(fileId: UUID, objectId: UUID): CompletableFuture<Void> {
+            val capture = Capture.empty<Void>()
+            val requestUrl = "https://api.xero.com/files.xro/1.0/files/$fileId/associations/$objectId"
+            return http.delete(requestUrl)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    // .ifModifiedSince() TODO
+                    .header(HttpHeaders.USER_AGENT, config.userAgent)
+                    .headers(oauthHeaders(
+                            config = config,
+                            httpMethod = HttpMethod.DELETE,
+                            requestPath = requestUrl
+                            // TODO query params
+                    ))
+                    .dispatch(Navigators.series(),
+                            Bindings.on(HttpStatus.Series.SUCCESSFUL).call(Void::class.java, capture),
                             Bindings.anySeries().call(ProblemRoute.problemHandling(Route.call { p -> handleProblem(p) }))
                     )
                     .thenApply(capture)
