@@ -32,6 +32,8 @@ class Files private constructor(){
             const val BASE_URL = "https://api.xero.com/files.xro/1.0/files"
         }
 
+        private fun fileUri(fileId: UUID) = "$BASE_URL/$fileId"
+
         //Bindings.on(HttpStatus.Series.SUCCESSFUL).call({ response: ClientHttpResponse, reader: MessageReader -> println(response.body.bufferedReader().use { it.readText() }) }),
 
         fun getFiles(): CompletableFuture<GetFilesResponseDto> {
@@ -56,7 +58,7 @@ class Files private constructor(){
 
 
         fun getFile(fileId: UUID): CompletableFuture<FileDto> {
-            val requestUrl = "$BASE_URL/$fileId"
+            val requestUrl = fileUri(fileId)
             val capture = Capture.empty<FileDto>()
 
             return http.get(requestUrl)
@@ -95,6 +97,26 @@ class Files private constructor(){
                     .body(multiValueMap)
                     .dispatch(Navigators.series(),
                             Bindings.on(HttpStatus.Series.SUCCESSFUL).call(FileDto::class.java, capture),
+                            Bindings.anySeries().call(ProblemRoute.problemHandling(Route.call { p -> handleProblem(p) }))
+                    )
+                    .thenApply(capture);
+        }
+
+        fun deleteFile(fileId: UUID): CompletableFuture<Void> {
+            val requestUrl = fileUri(fileId)
+            val capture = Capture.empty<Void>()
+
+            return http.delete(requestUrl)
+                    .contentType(MediaType.APPLICATION_JSON_UTF8)
+                    .accept(MediaType.APPLICATION_JSON_UTF8)
+                    .header(HttpHeaders.USER_AGENT, config.userAgent)
+                    .headers(oauthHeaders(
+                            config = config,
+                            httpMethod = HttpMethod.DELETE,
+                            requestPath = requestUrl
+                    ))
+                    .dispatch(Navigators.series(),
+                            Bindings.on(HttpStatus.Series.SUCCESSFUL).call(Void::class.java, capture),
                             Bindings.anySeries().call(ProblemRoute.problemHandling(Route.call { p -> handleProblem(p) }))
                     )
                     .thenApply(capture);
