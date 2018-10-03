@@ -113,9 +113,15 @@ class Files private constructor(){
         }
 
 
-        fun uploadFile(fileName: String, fileUrl: URL): CompletableFuture<FileDto> {
+        fun uploadFile(fileName: String, fileUrl: URL): CompletableFuture<FileDto> = uploadFile(
+                fileName = fileName,
+                bytes = fileUrl.readBytes()
+        )
+
+
+        fun uploadFile(fileName: String, bytes: ByteArray): CompletableFuture<FileDto> {
             val multiValueMap = LinkedMultiValueMap<String, Any>()
-            multiValueMap[fileName] = ExtendedResource(fileName, fileUrl.readBytes())
+            multiValueMap[fileName] = ExtendedResource(fileName, bytes)
 
             val capture = Capture.empty<FileDto>()
             return http.post(BASE_URL)
