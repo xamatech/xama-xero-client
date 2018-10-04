@@ -1,10 +1,10 @@
 package com.xama.client
 
-import com.google.api.client.util.StringUtils
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import java.net.URLEncoder
 import java.security.SecureRandom
+import java.security.Signature
 import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -62,7 +62,7 @@ private fun oauthHeaders(config: Config, credentials: Credentials) = listOf(
         "oauth_consumer_key" to config.consumerKey,
         "oauth_nonce" to nonce(),
         "oauth_timestamp" to computeTimestamp(),
-        "oauth_signature_method" to "HMAC-SHA1", // config.signer.signatureMethod, // TODO
+        "oauth_signature_method" to config.signatureMethod,
         "oauth_token" to credentials.token,
         "oauth_version" to "1.0"
 )
@@ -88,7 +88,12 @@ private fun computeSignature(config: Config,
 
     val signatureString = signatureStringBuilder.toString()
 
-    return hmacSha1(signatureString, credentials, config) // TODO
+    return if(config.appType == AppType.PUBLIC) {
+        hmacSha1(signatureString, credentials, config)
+    }
+    else {
+        rsaSha1(signatureString, config)
+    }
 }
 
 
@@ -100,9 +105,17 @@ private fun hmacSha1(signatureBaseString: String, credentials: Credentials, conf
         append(URLEncoder.encode(credentials.tokenSecret, ENCODING))
     }
 
-    val secretKey = SecretKeySpec(keyBuilder.toString().toByteArray(Charsets.UTF_8), "HmacSHA1")
-    val mac = Mac.getInstance("HmacSHA1")
+    val secretKey = SecretKeySpec(keyBuilder.toString().toByteArray(Charsets.UTF_8), config.algorithm)
+    val mac = Mac.getInstance(config.algorithm)
     mac.init(secretKey)
 
-    return Base64.getEncoder().encodeToString(mac.doFinal(StringUtils.getBytesUtf8(signatureBaseString)))
+    return Base64.getEncoder().encodeToString(mac.doFinal(signatureBaseString.toByteArray(Charsets.UTF_8)))
+}
+
+
+private fun rsaSha1(signatureBaseString: String, config: Config): String {
+    val signature = Signature.getInstance(config.algorithm)
+    signature.initSign(config.oauthKey)
+    signature.update(signatureBaseString.toByteArray(Charsets.UTF_8))
+    return Base64.getEncoder().encodeToString(signature.sign())
 }
