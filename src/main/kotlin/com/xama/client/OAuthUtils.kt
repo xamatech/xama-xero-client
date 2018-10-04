@@ -23,9 +23,9 @@ private fun computeTimestamp(): String = (System.currentTimeMillis() / 1000L).to
 internal fun oauthHeaders(config: Config,
                           httpMethod: HttpMethod,
                           requestPath: String,
+                          credentials: Credentials,
                           parameters: List<Pair<String, String>> = listOf()
 ): HttpHeaders {
-    val credentials = config.credentialsProvider()
     val oauthHeaders = oauthHeaders(config = config, credentials = credentials)
 
     val allParameters = oauthHeaders.toMutableList()

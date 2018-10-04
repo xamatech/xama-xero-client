@@ -1,6 +1,7 @@
 package com.xama.client.files
 
 import com.xama.client.Config
+import com.xama.client.Credentials
 import com.xama.client.handleProblem
 import com.xama.client.oauthHeaders
 import org.springframework.http.HttpHeaders
@@ -81,18 +82,27 @@ class Associations private constructor() {
     internal data class CreateAssociationDto(val objectId: UUID, val objectGroup: ObjectGroup)
 
     class Client (val http: Http, val config: Config) {
-        fun getFileAssociations(fileId: UUID): CompletableFuture<List<AssociationDto>> = getAssociations(
-                "https://api.xero.com/files.xro/1.0/files/$fileId/associations"
+
+        fun getFileAssociations(fileId: UUID): CompletableFuture<List<AssociationDto>> = getFileAssociations(
+                fileId = fileId,
+                credentials = config.credentialsProvider!!.invoke()
+        )
+
+        fun getFileAssociations(fileId: UUID,
+                                credentials: Credentials): CompletableFuture<List<AssociationDto>> = getAssociations(
+                requestUrl = "https://api.xero.com/files.xro/1.0/files/$fileId/associations",
+                credentials = credentials
         )
 
 
-        private fun getAssociations(requestUrl: String): CompletableFuture<List<AssociationDto>> {
+        private fun getAssociations(requestUrl: String, credentials: Credentials): CompletableFuture<List<AssociationDto>> {
             val capture = Capture.empty<List<AssociationDto>>()
             return http.get(requestUrl)
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
                     .accept(MediaType.APPLICATION_JSON_UTF8)
                     .header(HttpHeaders.USER_AGENT, config.userAgent)
                     .headers(oauthHeaders(
+                            credentials = credentials,
                             config = config,
                             httpMethod = HttpMethod.GET,
                             requestPath = requestUrl
@@ -105,12 +115,30 @@ class Associations private constructor() {
         }
 
 
-        fun getObjectAssociations(objectId: UUID): CompletableFuture<List<AssociationDto>> = getAssociations(
-                "https://api.xero.com/files.xro/1.0/associations/$objectId"
+        fun getObjectAssociations(objectId: UUID): CompletableFuture<List<AssociationDto>> = getObjectAssociations(
+                objectId = objectId,
+                credentials = config.credentialsProvider!!.invoke()
         )
 
 
-        fun createAssociation(fileId: UUID, objectId: UUID, objectGroup: ObjectGroup): CompletableFuture<AssociationDto> {
+        fun getObjectAssociations(objectId: UUID, credentials: Credentials): CompletableFuture<List<AssociationDto>> = getAssociations(
+                requestUrl = "https://api.xero.com/files.xro/1.0/associations/$objectId",
+                credentials = credentials
+        )
+
+        fun createAssociation(fileId: UUID, objectId: UUID, objectGroup: ObjectGroup): CompletableFuture<AssociationDto> =
+            createAssociation(
+                    fileId = fileId,
+                    objectId = objectId,
+                    objectGroup = objectGroup,
+                    credentials = config.credentialsProvider!!.invoke()
+            )
+
+
+        fun createAssociation(fileId: UUID,
+                              objectId: UUID,
+                              objectGroup: ObjectGroup,
+                              credentials: Credentials): CompletableFuture<AssociationDto> {
             val requestUrl = "https://api.xero.com/files.xro/1.0/files/$fileId/associations"
             val capture = Capture.empty<AssociationDto>()
             return http.post(requestUrl, fileId)
@@ -118,6 +146,7 @@ class Associations private constructor() {
                     .accept(MediaType.APPLICATION_JSON_UTF8)
                     .header(HttpHeaders.USER_AGENT, config.userAgent)
                     .headers(oauthHeaders(
+                            credentials = credentials,
                             config = config,
                             httpMethod = HttpMethod.POST,
                             requestPath = requestUrl
@@ -131,7 +160,14 @@ class Associations private constructor() {
         }
 
 
-        fun deleteAssociation(fileId: UUID, objectId: UUID): CompletableFuture<Void> {
+        fun deleteAssociation(fileId: UUID, objectId: UUID): CompletableFuture<Void> = deleteAssociation(
+                fileId = fileId,
+                objectId = objectId,
+                credentials = config.credentialsProvider!!.invoke()
+        )
+
+
+        fun deleteAssociation(fileId: UUID, objectId: UUID, credentials: Credentials): CompletableFuture<Void> {
             val capture = Capture.empty<Void>()
             val requestUrl = "https://api.xero.com/files.xro/1.0/files/$fileId/associations/$objectId"
             return http.delete(requestUrl)
@@ -139,6 +175,7 @@ class Associations private constructor() {
                     .accept(MediaType.APPLICATION_JSON_UTF8)
                     .header(HttpHeaders.USER_AGENT, config.userAgent)
                     .headers(oauthHeaders(
+                            credentials = credentials,
                             config = config,
                             httpMethod = HttpMethod.DELETE,
                             requestPath = requestUrl
