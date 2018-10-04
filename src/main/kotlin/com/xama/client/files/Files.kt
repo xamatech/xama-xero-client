@@ -134,7 +134,25 @@ class Files private constructor(){
         fun uploadFile(fileName: String,
                        fileUrl: URL): CompletableFuture<FileDto> = uploadFile(
                 fileName = fileName,
+                fileUrl = fileUrl,
+                credentials = config.credentialsProvider!!.invoke()
+
+        )
+
+
+        fun uploadFile(fileName: String,
+                       fileUrl: URL,
+                       credentials: Credentials
+        ): CompletableFuture<FileDto> = uploadFile(
+                fileName = fileName,
                 bytes = fileUrl.readBytes(),
+                credentials = credentials
+        )
+
+
+        fun uploadFile(fileName: String, bytes: ByteArray): CompletableFuture<FileDto> = uploadFile(
+                fileName = fileName,
+                bytes = bytes,
                 credentials = config.credentialsProvider!!.invoke()
         )
 
