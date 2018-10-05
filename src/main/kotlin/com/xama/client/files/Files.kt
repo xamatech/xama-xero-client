@@ -1,10 +1,7 @@
 package com.xama.client.files
 
 import com.google.common.collect.HashMultimap
-import com.xama.client.Config
-import com.xama.client.ExtendedResource
-import com.xama.client.handleProblem
-import com.xama.client.oauthHeaders
+import com.xama.client.*
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -59,7 +56,19 @@ class Files private constructor(){
                 pageSize: Int = DEFAULT_PAGE_SIZE,
                 page: Int = DEFAULT_PAGE,
                 sortParameter: Pair<SortField, SortDirection> = DEFAULT_SORT
+        ): CompletableFuture<GetFilesResponseDto> = getFiles(
+                pageSize = pageSize,
+                page = page,
+                sortParameter = sortParameter,
+                credentials = config.credentialsProvider!!.invoke()
+        )
 
+
+        fun getFiles(
+                pageSize: Int = DEFAULT_PAGE_SIZE,
+                page: Int = DEFAULT_PAGE,
+                sortParameter: Pair<SortField, SortDirection> = DEFAULT_SORT,
+                credentials: Credentials
         ): CompletableFuture<GetFilesResponseDto> {
 
             val queryParameterPairs = listOf(
@@ -80,6 +89,7 @@ class Files private constructor(){
                     .header(HttpHeaders.USER_AGENT, config.userAgent)
                     .headers(oauthHeaders(
                             config = config,
+                            credentials = credentials,
                             httpMethod = HttpMethod.GET,
                             requestPath = BASE_URL,
                             parameters = queryParameterPairs
@@ -88,11 +98,17 @@ class Files private constructor(){
                             Bindings.on(HttpStatus.Series.SUCCESSFUL).call(GetFilesResponseDto::class.java, capture),
                             Bindings.anySeries().call(ProblemRoute.problemHandling(Route.call { p -> handleProblem(p) }))
                     )
-                    .thenApply(capture);
+                    .thenApply(capture)
         }
 
 
-        fun getFile(fileId: UUID): CompletableFuture<FileDto> {
+        fun getFile(fileId: UUID): CompletableFuture<FileDto> = getFile(
+                fileId = fileId,
+                credentials = config.credentialsProvider!!.invoke()
+        )
+
+
+        fun getFile(fileId: UUID, credentials: Credentials): CompletableFuture<FileDto> {
             val requestUrl = fileUri(fileId)
             val capture = Capture.empty<FileDto>()
 
@@ -101,6 +117,7 @@ class Files private constructor(){
                     .accept(MediaType.APPLICATION_JSON_UTF8)
                     .header(HttpHeaders.USER_AGENT, config.userAgent)
                     .headers(oauthHeaders(
+                            credentials = credentials,
                             config = config,
                             httpMethod = HttpMethod.GET,
                             requestPath = requestUrl
@@ -113,13 +130,37 @@ class Files private constructor(){
         }
 
 
-        fun uploadFile(fileName: String, fileUrl: URL): CompletableFuture<FileDto> = uploadFile(
+
+        fun uploadFile(fileName: String,
+                       fileUrl: URL): CompletableFuture<FileDto> = uploadFile(
                 fileName = fileName,
-                bytes = fileUrl.readBytes()
+                fileUrl = fileUrl,
+                credentials = config.credentialsProvider!!.invoke()
+
         )
 
 
-        fun uploadFile(fileName: String, bytes: ByteArray): CompletableFuture<FileDto> {
+        fun uploadFile(fileName: String,
+                       fileUrl: URL,
+                       credentials: Credentials
+        ): CompletableFuture<FileDto> = uploadFile(
+                fileName = fileName,
+                bytes = fileUrl.readBytes(),
+                credentials = credentials
+        )
+
+
+        fun uploadFile(fileName: String, bytes: ByteArray): CompletableFuture<FileDto> = uploadFile(
+                fileName = fileName,
+                bytes = bytes,
+                credentials = config.credentialsProvider!!.invoke()
+        )
+
+
+        fun uploadFile(fileName: String, bytes:
+                       ByteArray,
+                       credentials: Credentials
+        ): CompletableFuture<FileDto> {
             val multiValueMap = LinkedMultiValueMap<String, Any>()
             multiValueMap[fileName] = ExtendedResource(fileName, bytes)
 
@@ -130,6 +171,7 @@ class Files private constructor(){
                     .header(HttpHeaders.USER_AGENT, config.userAgent)
                     .headers(oauthHeaders(
                             config = config,
+                            credentials = credentials,
                             httpMethod = HttpMethod.POST,
                             requestPath = BASE_URL
                     ))
@@ -142,7 +184,22 @@ class Files private constructor(){
         }
 
 
-        fun changeFile(fileId: UUID, newFileName: String? = null, newFolderId: UUID? = null): CompletableFuture<FileDto> {
+        fun changeFile(fileId: UUID,
+                       newFileName: String? = null,
+                       newFolderId: UUID? = null
+        ): CompletableFuture<FileDto> = changeFile(
+                fileId = fileId,
+                newFileName = newFileName,
+                newFolderId = newFolderId,
+                credentials = config.credentialsProvider!!.invoke()
+        )
+
+
+        fun changeFile(fileId: UUID,
+                       newFileName: String? = null,
+                       newFolderId: UUID? = null,
+                       credentials: Credentials): CompletableFuture<FileDto> {
+
             check(newFileName != null || newFolderId != null) {
                 "cannot file [fileId=$fileId]: either new file name or folder id must be specified"
             }
@@ -155,6 +212,7 @@ class Files private constructor(){
                     .accept(MediaType.APPLICATION_JSON_UTF8)
                     .header(HttpHeaders.USER_AGENT, config.userAgent)
                     .headers(oauthHeaders(
+                            credentials = credentials,
                             config = config,
                             httpMethod = HttpMethod.PUT,
                             requestPath = requestUrl
@@ -167,8 +225,12 @@ class Files private constructor(){
                     .thenApply(capture);
         }
 
+        fun deleteFile(fileId: UUID): CompletableFuture<Void> = deleteFile(
+                fileId = fileId,
+                credentials = config.credentialsProvider!!.invoke()
+        )
 
-        fun deleteFile(fileId: UUID): CompletableFuture<Void> {
+        fun deleteFile(fileId: UUID, credentials: Credentials): CompletableFuture<Void> {
             val requestUrl = fileUri(fileId)
             val capture = Capture.empty<Void>()
 
@@ -177,6 +239,7 @@ class Files private constructor(){
                     .accept(MediaType.APPLICATION_JSON_UTF8)
                     .header(HttpHeaders.USER_AGENT, config.userAgent)
                     .headers(oauthHeaders(
+                            credentials = credentials,
                             config = config,
                             httpMethod = HttpMethod.DELETE,
                             requestPath = requestUrl
