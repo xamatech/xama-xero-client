@@ -18,7 +18,7 @@
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
 
-        <jackson.kotlin.version>2.9.7</jackson.kotlin.version>
+        <jackson.kotlin.version>2.9.2</jackson.kotlin.version>
         <junit.version>4.12</junit.version>
         <riptide.version>2.8.1</riptide.version>
     </properties>
@@ -34,6 +34,12 @@
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-kotlin</artifactId>
             <version>${jackson.kotlin.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>kotlin-reflect</artifactId>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
