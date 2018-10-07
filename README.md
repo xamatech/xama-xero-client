@@ -1,13 +1,14 @@
 # Xama Xero Client
 
-Kotlin based Client implementation for accessing the
+A Kotlin based Client implementation for accessing the
 [Xero File API](https://developer.xero.com/documentation/files-api/overview-files) which
-is heavily based on the [Zalando Riptide](https://github.com/zalando/riptide) HTTP client.
+is heavily based on the [Zalando Riptide](https://github.com/zalando/riptide) HTTP client
+and inspired by [XeroJava](https://github.com/XeroAPI/Xero-Java).
 
-Please note that the implementation has not been fully completed yet but all
+Please note that the implementation has not been fully completed but all
 [Files](https://developer.xero.com/documentation/files-api/files) and
 [Associations](https://developer.xero.com/documentation/files-api/associations)
-endpoints can be accesed with the client.
+endpoints can be accessed with the client.
 
 
 ## Prerequisites
@@ -38,7 +39,7 @@ endpoints can be accesed with the client.
 
 ### HTTP Client
 
-The `Associations` and the `Files` related client require a `Config`
+The `Associations` and the `Files` related client requires a `Config`
 as well as a [Zalando Riptide](https://github.com/zalando/riptide) HTTP
 client instance. Please consider the
 [Zalando Riptide documentation](https://github.com/zalando/riptide#configuration)
@@ -131,7 +132,7 @@ You can specify Lambda object as Credentials Provider in the `Config` in order t
 OAuth credentials when a client method is executed. This might be useful
 for fetching possibly refreshed tokens e.g. from a DB. Please note that
 a `Credentials Provider` is not mandatory. However, if it is not specified,
-a `Credentials` object must be passed in client method call.
+a `Credentials` object must be passed in each client method call.
 
 
 #### WITH Credentials Provider
@@ -202,7 +203,7 @@ client.uploadFile("test.jpg", "file:///tmp/test.jpeg", new Credentials("token, "
 ```
 
 **NOTE:** You can not specify a Credentials Provider in a  `Partner`
-App but you also do not need to pass `Credentials` to a client call.
+App but you do not need to pass `Credentials` to a client call.
 
 
 ## Usage
@@ -229,7 +230,15 @@ final Files.Client client = new Files.Client(http, config);
 final Credentials credentials = new Credentials("<token>", "<tokenSecret>");
 
 final CompletableFuture<Files.FileDto> future = client.uploadFile("test.jpg", "file:///tmp/test.jpeg");
-final Files.FileDto fileDto = Completion.join(future);
+final Files.FileDto file = Completion.join(future);
+
+
+final Associations.Client associationsClient = new Associations.Client(http, config);
+Completion.join(associationsClient.createAssociation(
+    file.getId(),
+    UUID.fromString("193FDBDA-4738-4AEA-8382-DFAF32F819B0"), // Xero Bank Transaction Id
+    Associations.ObjectGroup.BANKTRANSACTION
+));
 ```
 
 Note: you can find examples for each functionality in our [tests](https://github.com/xamatech/xama-xero-client/tree/master/src/test/java/com/xama).
