@@ -1,4 +1,5 @@
 # Xama Xero Client
+
 Kotlin based Client implementation for accessing the
 [Xero File API](https://developer.xero.com/documentation/files-api/overview-files) which
 is heavily based on the [Zalando Riptide](https://github.com/zalando/riptide) HTTP client.
@@ -36,6 +37,7 @@ endpoints can be accesed with the client.
 ## Configuration
 
 ### HTTP Client
+
 The `Associations` and the `Files` related client require a `Config`
 as well as a [Zalando Riptide](https://github.com/zalando/riptide) HTTP
 client instance. Please consider the
@@ -124,6 +126,7 @@ Config.Companion.getPrivateAppConfig(
 ```
 
 ### Credentials Provider
+
 You can specify Lambda object as Credentials Provider in the `Config` in order to fetch the
 OAuth credentials when a client method is executed. This might be useful
 for fetching possibly refreshed tokens e.g. from a DB. Please note that
@@ -202,3 +205,41 @@ client.uploadFile("test.jpg", "file:///tmp/test.jpeg", new Credentials("token, "
 App but you also do not need to pass `Credentials` to a client call.
 
 
+## Usage
+
+```java
+final ObjectMapper objectMapper = ConfigUtilsKt.configureObjectMapper(new Jackson2ObjectMapperBuilder()).build();
+
+final Http http = ConfigUtilsKt.configureHttp(
+        Http.builder().requestFactory(
+                new RestAsyncClientHttpRequestFactory(httpClient, executor)),
+                objectMapper
+)
+.build();
+
+final Config config = Config.Companion.getPublicAppConfig(
+   "<ConsumerKey>",
+   "<ConsumerSecret>",
+   "My-Fancy-User-Agent",
+   () -> new Credentials("<token>", "<tokenSecret>")
+);
+
+final Files.Client client = new Files.Client(http, config);
+
+final Credentials credentials = new Credentials("<token>", "<tokenSecret>");
+
+final CompletableFuture<Files.FileDto> future = client.uploadFile("test.jpg", "file:///tmp/test.jpeg");
+final Files.FileDto fileDto = Completion.join(future);
+```
+
+Note: you can find examples for each functionality in our [tests](https://github.com/xamatech/xama-xero-client/tree/master/src/test/java/com/xama).
+
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+
+## Acknowledgments
+
+* [XeroJava](https://github.com/XeroAPI/Xero-Java)
+* [Zalando Riptide](https://github.com/zalando/riptide)
