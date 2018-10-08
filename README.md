@@ -87,8 +87,8 @@ Config.Companion.getPublicAppConfig(
 **Kotlin**:
 ```kotlin
 Config.getPrivateAppConfig(
-        consumerKey = "F1PPLNXCD12QOVWOKOZLON09UWJLMV",
-        consumerSecret = "6UCRXSEVZLUOU5KPBTQHKSHPQDXVY5",
+        consumerKey = "<ConsumerKey>",
+        consumerSecret = "<ConsumerSecret>",
         privateKeyCert = "/public_privatekey.pfx"
         privateKeyPassword: String = ""
 )
