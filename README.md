@@ -1,3 +1,5 @@
+[![](https://jitpack.io/v/xamatech/xama-xero-client.svg)](https://jitpack.io/#xamatech/xama-xero-client)
+
 # Xama Xero Client
 
 **IMPORTANT: development is still in progress**
@@ -254,6 +256,3 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 * [XeroJava](https://github.com/XeroAPI/Xero-Java)
 * [Zalando Riptide](https://github.com/zalando/riptide)
-
-
-[![](https://jitpack.io/v/xamatech/xama-xero-client.svg)](https://jitpack.io/#xamatech/xama-xero-client)
