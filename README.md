@@ -1,5 +1,7 @@
 # Xama Xero Client
 
+**IMPORTANT: development is still in progress**
+
 A Kotlin based Client implementation for accessing the
 [Xero File API](https://developer.xero.com/documentation/files-api/overview-files) which
 is heavily based on the [Zalando Riptide](https://github.com/zalando/riptide) HTTP client
