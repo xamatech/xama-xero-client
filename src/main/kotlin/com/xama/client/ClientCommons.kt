@@ -1,6 +1,8 @@
 package com.xama.client
 
 import org.springframework.http.HttpStatus
+import java.io.InputStream
+import java.net.URL
 import java.security.KeyStore
 import java.security.PrivateKey
 import java.util.*
@@ -13,7 +15,7 @@ class Config private constructor(val consumerKey: String,
                                  val consumerSecret : String,
                                  val credentialsProvider: (() -> Credentials)?,
                                  val appType: AppType,
-                                 val privateKeyCert: String? = null,
+                                 val privateKeyCertStream : InputStream? = null,
                                  val privateKeyPassword: String? = null,
                                  val userAgent: String
 ) {
@@ -23,14 +25,15 @@ class Config private constructor(val consumerKey: String,
 
 
     var oauthKey: PrivateKey? = if(appType != AppType.PUBLIC){
+        requireNotNull(privateKeyCertStream){ "keyCertStream must not be null" }
+
         val oauthKeyStore: KeyStore = KeyStore.getInstance("PKCS12")
-        val privateKeyCertStream = Config::class.java.getResourceAsStream(privateKeyCert)
         val privateKeyPasswordChars = privateKeyPassword!!.toCharArray()
         oauthKeyStore.load(privateKeyCertStream, privateKeyPasswordChars)
 
         val alias = oauthKeyStore.aliases().asSequence().filter { oauthKeyStore.isKeyEntry(it) }.first()
         requireNotNull(alias){
-            "could not find suitable alias in [privateKeyCert=$privateKeyCert] with given password"
+            "could not find suitable alias in givent private key certificate with given password"
         }
 
         oauthKeyStore.getKey(alias, privateKeyPasswordChars) as PrivateKey
@@ -68,15 +71,13 @@ class Config private constructor(val consumerKey: String,
 
         fun getPartnerAppConfig(consumerKey: String,
                                 consumerSecret : String,
-                                privateKeyCert: String,
+                                urlToPrivateKeyCert: URL,
                                 privateKeyPassword: String = "",
                                 userAgent: String = "userAgent-${UUID.randomUUID()}"): Config {
-            return Config(
-                    appType = AppType.PARTNER,
+            return getPartnerAppConfig(
                     consumerKey = consumerKey,
                     consumerSecret = consumerSecret,
-                    credentialsProvider = null,
-                    privateKeyCert = privateKeyCert,
+                    privateKeyCertStream = urlToPrivateKeyCert.openStream(),
                     privateKeyPassword = privateKeyPassword,
                     userAgent = userAgent
             )
@@ -85,16 +86,15 @@ class Config private constructor(val consumerKey: String,
 
         fun getPartnerAppConfig(consumerKey: String,
                                 consumerSecret : String,
-                                privateKeyCert: String,
+                                privateKeyCertStream: InputStream,
                                 privateKeyPassword: String = "",
-                                credentialsProvider: () -> Credentials,
                                 userAgent: String = "userAgent-${UUID.randomUUID()}"): Config {
             return Config(
                     appType = AppType.PARTNER,
                     consumerKey = consumerKey,
                     consumerSecret = consumerSecret,
-                    credentialsProvider = credentialsProvider,
-                    privateKeyCert = privateKeyCert,
+                    credentialsProvider = null,
+                    privateKeyCertStream = privateKeyCertStream,
                     privateKeyPassword = privateKeyPassword,
                     userAgent = userAgent
             )
@@ -103,7 +103,22 @@ class Config private constructor(val consumerKey: String,
 
         fun getPrivateAppConfig(consumerKey: String,
                                 consumerSecret : String,
-                                privateKeyCert: String ,
+                                urlToPrivateKeyCert: URL,
+                                privateKeyPassword: String = "",
+                                userAgent: String = "userAgent-${UUID.randomUUID()}"): Config {
+            return getPrivateAppConfig(
+                    consumerKey = consumerKey,
+                    consumerSecret = consumerSecret,
+                    privateKeyCertStream = urlToPrivateKeyCert.openStream(),
+                    privateKeyPassword = privateKeyPassword,
+                    userAgent = userAgent
+            )
+        }
+
+
+        fun getPrivateAppConfig(consumerKey: String,
+                                consumerSecret : String,
+                                privateKeyCertStream: InputStream,
                                 privateKeyPassword: String = "",
                                 userAgent: String = "userAgent-${UUID.randomUUID()}"): Config {
             return Config(
@@ -116,7 +131,7 @@ class Config private constructor(val consumerKey: String,
                                 tokenSecret=consumerSecret
                         )
                     },
-                    privateKeyCert = privateKeyCert,
+                    privateKeyCertStream = privateKeyCertStream,
                     privateKeyPassword = privateKeyPassword,
                     userAgent = userAgent
             )
