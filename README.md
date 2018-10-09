@@ -122,8 +122,6 @@ Config.Companion.getPrivateAppConfig(
     "<PrivateKeyPassword>",
     "My-Fancy-User-Agent"
 );
-
-// or
 ```
 
 
