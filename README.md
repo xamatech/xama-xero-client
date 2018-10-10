@@ -90,7 +90,7 @@ Config.getPrivateAppConfig(
         consumerKey = "<ConsumerKey>",
         consumerSecret = "<ConsumerSecret>",
         urlToPrivateKeyCert = URL("file:///tmp/public_privatekey.pfx"),
-        privateKeyPassword: String = ""
+        privateKeyPassword = "<PrivateKeyPassword>"
 )
 
 // or
@@ -99,7 +99,7 @@ Config.getPrivateAppConfig(
         consumerKey = "<ConsumerKey>",
         consumerSecret = "<ConsumerSecret>",
         privateKeyStream = Config::class.java.getResourceAsStream("/public_privatekey.pfx"),
-        privateKeyPassword: String = ""
+        privateKeyPassword = "<PrivateKeyPassword>"
 )
 ```
 
