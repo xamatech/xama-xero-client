@@ -25,9 +25,9 @@ endpoints can be accessed with the client.
 ```xml
 <dependencies>
     <dependency>
-        <groupId>org.zalando</groupId>
-        <artifactId>riptide-core</artifactId>
-        <version>${riptide.version}</version>
+        <groupId>com.github.xamatech</groupId>
+        <artifactId>xama-xero-client</artifactId>
+        <version>{xama-xero-client-version}</version>
     </dependency>
 </dependencies>
 
@@ -129,7 +129,7 @@ Config.Companion.getPrivateAppConfig(
 
 **Kotlin**:
 ```kotlin
-Config.Companion.getPartnerAppConfig(
+Config.getPartnerAppConfig(
     consumerKey = "<ConsumerKey>",
     consumerSecret = "<ConsumerSecret>",
     urlToPrivateKeyCert = URL("file:///tmp/public_privatekey.pfx"),
@@ -139,7 +139,7 @@ Config.Companion.getPartnerAppConfig(
 
 // or
 
-Config.Companion.getPartnerAppConfig(
+Config.getPartnerAppConfig(
     consumerKey = "<ConsumerKey>",
     consumerSecret = "<ConsumerSecret>",
     privateKeyStream = Config::class.java.getResourceAsStream("/public_privatekey.pfx"),
