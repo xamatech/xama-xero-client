@@ -89,8 +89,17 @@ Config.Companion.getPublicAppConfig(
 Config.getPrivateAppConfig(
         consumerKey = "<ConsumerKey>",
         consumerSecret = "<ConsumerSecret>",
-        privateKeyCert = "/public_privatekey.pfx"
-        privateKeyPassword: String = ""
+        urlToPrivateKeyCert = URL("file:///tmp/public_privatekey.pfx"),
+        privateKeyPassword = "<PrivateKeyPassword>"
+)
+
+// or
+
+Config.getPrivateAppConfig(
+        consumerKey = "<ConsumerKey>",
+        consumerSecret = "<ConsumerSecret>",
+        privateKeyStream = Config::class.java.getResourceAsStream("/public_privatekey.pfx"),
+        privateKeyPassword = "<PrivateKeyPassword>"
 )
 ```
 
@@ -99,7 +108,17 @@ Config.getPrivateAppConfig(
 Config.Companion.getPrivateAppConfig(
     "<ConsumerKey>",
     "<ConsumerSecret>",
-    "<PathToPrivateKey>",
+    new URL("file:///tmp/public_privatekey.pfx"),
+    "<PrivateKeyPassword>",
+    "My-Fancy-User-Agent"
+);
+
+// or
+
+Config.Companion.getPrivateAppConfig(
+    "<ConsumerKey>",
+    "<ConsumerSecret>",
+    Config.class.getResourceAsStream("/public_privatekey.pfx"),
     "<PrivateKeyPassword>",
     "My-Fancy-User-Agent"
 );
@@ -111,20 +130,40 @@ Config.Companion.getPrivateAppConfig(
 **Kotlin**:
 ```kotlin
 Config.Companion.getPartnerAppConfig(
-    "<ConsumerKey>",
-    "<ConsumerSecret>",
-    "<PathToPrivateKey>",
-    "<PrivateKeyPassword>",
-    "My-Fancy-User-Agent"
+    consumerKey = "<ConsumerKey>",
+    consumerSecret = "<ConsumerSecret>",
+    urlToPrivateKeyCert = URL("file:///tmp/public_privatekey.pfx"),
+    privateKeyPassword = "<PrivateKeyPassword>",
+    userAgent = "My-Fancy-User-Agent"
+);
+
+// or
+
+Config.Companion.getPartnerAppConfig(
+    consumerKey = "<ConsumerKey>",
+    consumerSecret = "<ConsumerSecret>",
+    privateKeyStream = Config::class.java.getResourceAsStream("/public_privatekey.pfx"),
+    privateKeyPassword = "<PrivateKeyPassword>",
+    userAgent = "My-Fancy-User-Agent"
 );
 ```
 
 **Java**:
 ```java
-Config.Companion.getPrivateAppConfig(
+Config.Companion.getPartnerAppConfig(
     "<ConsumerKey>",
     "<ConsumerSecret>",
-    "<PathToPrivateKey>",
+    new URL("file:///tmp/public_privatekey.pfx"),
+    "<PrivateKeyPassword>",
+    "My-Fancy-User-Agent"
+);
+
+// or
+
+Config.Companion.getPartnerAppConfig(
+    "<ConsumerKey>",
+    "<ConsumerSecret>",
+    Config.class.getResourceAsStream("/public_privatekey.pfx"),
     "<PrivateKeyPassword>",
     "My-Fancy-User-Agent"
 );
