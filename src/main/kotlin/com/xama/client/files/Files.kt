@@ -2,10 +2,8 @@ package com.xama.client.files
 
 import com.google.common.collect.HashMultimap
 import com.xama.client.*
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
+import org.apache.tika.Tika
+import org.springframework.http.*
 import org.springframework.util.LinkedMultiValueMap
 import org.zalando.riptide.Bindings
 import org.zalando.riptide.Http
@@ -16,6 +14,10 @@ import org.zalando.riptide.problem.ProblemRoute
 import java.net.URL
 import java.util.*
 import java.util.concurrent.CompletableFuture
+
+
+
+
 
 /**
  * see https://developer.xero.com/documentation/files-api/files
@@ -43,12 +45,17 @@ class Files private constructor(){
 
 
     class Client (val http: Http, val config: Config){
+
+        private val tika: Tika = Tika()
+
         companion object {
             const val BASE_URL = "https://api.xero.com/files.xro/1.0/files"
             const val DEFAULT_PAGE_SIZE = 100
             const val DEFAULT_PAGE = 1
             val DEFAULT_SORT = Pair(SortField.CREATED, SortDirection.DESC)
         }
+
+
 
         private fun fileUri(fileId: UUID) = "$BASE_URL/$fileId"
 
@@ -161,8 +168,14 @@ class Files private constructor(){
                        ByteArray,
                        credentials: Credentials
         ): CompletableFuture<FileDto> {
+            val resourceHeaders = HttpHeaders();
+            resourceHeaders.contentType = MediaType.parseMediaType(tika.detect(fileName))
+
+            val resource = ExtendedResource(fileName, bytes)
+            val fileEntity = HttpEntity(resource, resourceHeaders)
+
             val multiValueMap = LinkedMultiValueMap<String, Any>()
-            multiValueMap[fileName] = ExtendedResource(fileName, bytes)
+            multiValueMap[fileName] = fileEntity
 
             val capture = Capture.empty<FileDto>()
             return http.post(BASE_URL)

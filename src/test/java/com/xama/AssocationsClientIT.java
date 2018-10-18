@@ -152,7 +152,7 @@ public class AssocationsClientIT {
     public void testDeleteAssociation() throws Exception {
         final Files.FileDto file = Completion.join(filesClient.uploadFile(
                 "testDeleteAssociation.jpg",
-                TestConfig.INSTANCE.getTestImageUrl()
+                TestUtils.toByteArray("/test.jpg")
         ));
 
         final Associations.AssociationDto association = Completion.join(client.createAssociation(
