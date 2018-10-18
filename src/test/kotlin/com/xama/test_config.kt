@@ -2,13 +2,8 @@ package com.xama
 
 import com.xama.client.Config
 import com.xama.client.Credentials
-import java.net.URL
 
 object TestConfig {
-
-
-
-    val testImageUrl = URL("file:///Users/bfriedrich/Desktop/test.jpeg")
 
     /*
 
@@ -18,8 +13,6 @@ object TestConfig {
             privateKeyCert = "/public_privatekey.pfx"
     )
     */
-
-
 
 
     val testConfig = Config.getPublicAppConfig(

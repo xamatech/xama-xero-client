@@ -22,6 +22,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import static com.xama.TestUtils.toByteArray;
 import static org.junit.Assert.*;
 
 public class FilesClientIT {
@@ -65,7 +66,7 @@ public class FilesClientIT {
 
     @org.junit.Test
     public void testUpload() throws Exception {
-        final CompletableFuture<Files.FileDto> future = client.uploadFile("test.jpg", TestConfig.INSTANCE.getTestImageUrl());
+        final CompletableFuture<Files.FileDto> future = client.uploadFile("test.jpg", toByteArray("/test.jpg"));
         final Files.FileDto fileDto = Completion.join(future);
 
         assertEquals("test.jpg", fileDto.getName());
@@ -85,6 +86,21 @@ public class FilesClientIT {
         assertNotNull("fullName must not be null", user.getFullName());
     }
 
+
+    @org.junit.Test
+    public void testUploadDifferentFileTypes() throws Exception {
+        CompletableFuture<Files.FileDto> future = client.uploadFile("test_files_client.jpg", toByteArray("/test.jpg"));
+        Files.FileDto fileDto = Completion.join(future);
+        assertEquals("image/jpeg", fileDto.getMimeType());
+
+        future = client.uploadFile("test_files_client.pdf", toByteArray("/test.pdf"));
+        fileDto = Completion.join(future);
+        assertEquals("application/pdf", fileDto.getMimeType());
+
+        future = client.uploadFile("test_files_client.xlsx", toByteArray("/test.xlsx"));
+        fileDto = Completion.join(future);
+        assertEquals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileDto.getMimeType());
+    }
 
     @org.junit.Test
     public void testGetFiles() {
