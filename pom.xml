@@ -5,7 +5,7 @@
 
     <groupId>com.xama</groupId>
     <artifactId>xama-xero-client</artifactId>
-    <version>0.18.40.0</version>
+    <version>0.18.45.0</version>
     <packaging>jar</packaging>
 
     <name>Xama Xero Client</name>
