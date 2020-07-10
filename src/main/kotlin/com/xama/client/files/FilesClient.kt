@@ -111,13 +111,14 @@ class FilesClient(private val http: Http) {
     }
 
 
-    fun uploadFile(fileName: String,
-                   fileUrl: URL,
-                   credentials: Credentials
+    fun uploadFile(
+            credentials: Credentials,
+            fileName: String,
+            fileUrl: URL
     ): CompletableFuture<FileDto> = uploadFile(
+            credentials = credentials,
             fileName = fileName,
-            bytes = fileUrl.readBytes(),
-            credentials = credentials
+            bytes = fileUrl.readBytes()
     )
 
 
