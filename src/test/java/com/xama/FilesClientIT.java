@@ -2,7 +2,6 @@ package com.xama;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xama.client.ConfigUtilsKt;
-import com.xama.client.Credentials;
 import com.xama.client.files.*;
 import kotlin.Pair;
 import org.apache.http.client.HttpClient;
@@ -22,7 +21,6 @@ import org.zalando.riptide.httpclient.RestAsyncClientHttpRequestFactory;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static com.xama.TestUtils.toByteArray;
@@ -31,7 +29,6 @@ import static org.junit.Assert.*;
 public class FilesClientIT {
 
     private FilesClient client;
-    private Credentials credentials;
 
     @Before
     public void setup() {
@@ -64,19 +61,12 @@ public class FilesClientIT {
         .build();
         
         client = new FilesClient(http);
-
-        credentials = new Credentials(
-                "accessToken",
-                UUID.randomUUID(),
-                "xama-xero-client-test"
-        );
-
     }
 
     @Test
     public void testUpload() throws Exception {
         final CompletableFuture<FileDto> future = client.uploadFile(
-                credentials,
+                TestUtils.CREDENTIALS,
                 "test.jpg",
                 toByteArray("/test.jpg")
         );
@@ -103,7 +93,7 @@ public class FilesClientIT {
     @Test
     public void testUploadDifferentFileTypes() throws Exception {
         CompletableFuture<FileDto> future = client.uploadFile(
-                credentials,
+                TestUtils.CREDENTIALS,
                 "test_files_client.jpg",
                 toByteArray("/test.jpg")
         );
@@ -111,7 +101,7 @@ public class FilesClientIT {
         assertEquals("image/jpeg", fileDto.getMimeType());
 
         future = client.uploadFile(
-                credentials,
+                TestUtils.CREDENTIALS,
                 "test_files_client.pdf",
                 toByteArray("/test.pdf")
         );
@@ -119,7 +109,7 @@ public class FilesClientIT {
         assertEquals("application/pdf", fileDto.getMimeType());
 
         future = client.uploadFile(
-                credentials,
+                TestUtils.CREDENTIALS,
                 "test_files_client.xlsx",
                 toByteArray("/test.xlsx")
         );
@@ -131,7 +121,7 @@ public class FilesClientIT {
     @Test
     public void testGetFiles() {
         final CompletableFuture<GetFilesResponseDto> future = client.getFiles(
-                credentials,
+                TestUtils.CREDENTIALS,
                 FilesClient.DEFAULT_PAGE_SIZE,
                 FilesClient.DEFAULT_PAGE,
                 new Pair<>(SortField.CREATED, SortDirection.DESC)
@@ -144,14 +134,14 @@ public class FilesClientIT {
 
         final List<FileDto> items = response.getItems();
         assertNotNull("items list must not be null", items);
-        assertFalse("list of files must not be null", items.isEmpty());
+        assertFalse("list of files must not be empty", items.isEmpty());
     }
 
 
     @Test
     public void testGetFile() {
         final GetFilesResponseDto filesResponse = Completion.join(client.getFiles(
-                credentials,
+                TestUtils.CREDENTIALS,
                 FilesClient.DEFAULT_PAGE_SIZE,
                 FilesClient.DEFAULT_PAGE,
                 new Pair<>(SortField.CREATED, SortDirection.DESC)
@@ -160,7 +150,7 @@ public class FilesClientIT {
         final List<FileDto> files = filesResponse.getItems();
         final FileDto sourceFile = files.get(0);
 
-        final FileDto retrievedFile = Completion.join(client.getFile(credentials, sourceFile.getId()));
+        final FileDto retrievedFile = Completion.join(client.getFile(TestUtils.CREDENTIALS, sourceFile.getId()));
         assertEquals("wrong file retrieved", sourceFile, retrievedFile);
     }
 
@@ -168,7 +158,7 @@ public class FilesClientIT {
     @Test
     public void testDeleteFile() {
         GetFilesResponseDto filesResponse = Completion.join(client.getFiles(
-                credentials,
+                TestUtils.CREDENTIALS,
                 FilesClient.DEFAULT_PAGE_SIZE,
                 FilesClient.DEFAULT_PAGE,
                 new Pair<>(SortField.CREATED, SortDirection.DESC)
@@ -177,10 +167,10 @@ public class FilesClientIT {
         List<FileDto> files = filesResponse.getItems();
         final FileDto sourceFile = files.get(0);
 
-        Completion.join(client.deleteFile(credentials, sourceFile.getId()));
+        Completion.join(client.deleteFile(TestUtils.CREDENTIALS, sourceFile.getId()));
 
         filesResponse = Completion.join(client.getFiles(
-                credentials,
+                TestUtils.CREDENTIALS,
                 FilesClient.DEFAULT_PAGE_SIZE,
                 FilesClient.DEFAULT_PAGE,
                 new Pair<>(SortField.CREATED, SortDirection.DESC)

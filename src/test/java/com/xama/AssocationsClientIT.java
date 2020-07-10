@@ -2,7 +2,6 @@ package com.xama;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xama.client.ConfigUtilsKt;
-import com.xama.client.Credentials;
 import com.xama.client.files.*;
 import kotlin.Pair;
 import org.apache.http.client.HttpClient;
@@ -29,9 +28,8 @@ public class AssocationsClientIT {
 
     private FilesClient filesClient;
     private AssociationsClient client;
-    private Credentials credentials;
 
-    private static final UUID BANK_TRANSACTION_ID = UUID.fromString("e654a6a0-5492-4875-9964-e21bd46b8b4f");
+    private static final UUID BANK_TRANSACTION_ID = UUID.fromString("cc9b46e5-1dc7-46a2-a1fa-ed387c15437f");
 
 
     @Before
@@ -67,19 +65,13 @@ public class AssocationsClientIT {
 
         client = new AssociationsClient(http);
         filesClient = new FilesClient(http);
-
-        credentials = new Credentials(
-                "accessToken",
-                UUID.randomUUID(),
-                "xama-xero-client-test"
-        );
     }
 
 
     @org.junit.Test
     public void testCreateAssociation() {
         final GetFilesResponseDto filesResponse = Completion.join(filesClient.getFiles(
-                credentials,
+                TestUtils.CREDENTIALS,
                 FilesClient.DEFAULT_PAGE_SIZE,
                 FilesClient.DEFAULT_PAGE,
                 new Pair<>(SortField.CREATED, SortDirection.DESC)
@@ -89,7 +81,7 @@ public class AssocationsClientIT {
         final FileDto sourceFile = files.get(0);
 
         final AssociationDto association = Completion.join(client.createAssociation(
-                credentials,
+                TestUtils.CREDENTIALS,
                 sourceFile.getId(),
                 BANK_TRANSACTION_ID,
                 ObjectGroup.BANKTRANSACTION
@@ -105,7 +97,7 @@ public class AssocationsClientIT {
     @Test
     public void testGetFileAssociations() {
         final GetFilesResponseDto filesResponse = Completion.join(filesClient.getFiles(
-                credentials,
+                TestUtils.CREDENTIALS,
                 FilesClient.DEFAULT_PAGE_SIZE,
                 FilesClient.DEFAULT_PAGE,
                 new Pair<>(SortField.CREATED, SortDirection.DESC)
@@ -115,7 +107,7 @@ public class AssocationsClientIT {
         final FileDto sourceFile = files.get(0);
 
         final AssociationDto association = Completion.join(client.createAssociation(
-                credentials,
+                TestUtils.CREDENTIALS,
                 sourceFile.getId(),
                 BANK_TRANSACTION_ID,
                 ObjectGroup.BANKTRANSACTION
@@ -123,7 +115,7 @@ public class AssocationsClientIT {
 
 
         final List<AssociationDto> associations = Completion.join(
-                client.getFileAssociations(credentials, sourceFile.getId())
+                client.getFileAssociations(TestUtils.CREDENTIALS, sourceFile.getId())
         );
         assertNotNull("list of retrieved associations must not be null", associations);
         assertEquals("expected 1 association", 1, associations.size());
@@ -134,7 +126,7 @@ public class AssocationsClientIT {
     @Test
     public void testGetObjectAssociations() {
         final GetFilesResponseDto filesResponse = Completion.join(filesClient.getFiles(
-                credentials,
+                TestUtils.CREDENTIALS,
                 FilesClient.DEFAULT_PAGE_SIZE,
                 FilesClient.DEFAULT_PAGE,
                 new Pair<>(SortField.CREATED, SortDirection.DESC)
@@ -144,7 +136,7 @@ public class AssocationsClientIT {
         final FileDto sourceFile = files.get(0);
 
         final AssociationDto association = Completion.join(client.createAssociation(
-                credentials,
+                TestUtils.CREDENTIALS,
                 sourceFile.getId(),
                 BANK_TRANSACTION_ID,
                 ObjectGroup.BANKTRANSACTION
@@ -152,7 +144,7 @@ public class AssocationsClientIT {
 
 
         final List<AssociationDto> associations = Completion.join(
-                client.getObjectAssociations(credentials, BANK_TRANSACTION_ID)
+                client.getObjectAssociations(TestUtils.CREDENTIALS, BANK_TRANSACTION_ID)
         );
         assertNotNull("list of retrieved associations must not be null", associations);
         assertEquals("expected 1 association", 1, associations.size());
@@ -163,20 +155,20 @@ public class AssocationsClientIT {
     @Test
     public void testDeleteAssociation() throws Exception {
         final FileDto file = Completion.join(filesClient.uploadFile(
-                credentials,
+                TestUtils.CREDENTIALS,
                 "testDeleteAssociation.jpg",
                 TestUtils.toByteArray("/test.jpg")
         ));
 
         Completion.join(client.createAssociation(
-                credentials,
+                TestUtils.CREDENTIALS,
                 file.getId(),
                 BANK_TRANSACTION_ID,
                 ObjectGroup.BANKTRANSACTION
         ));
 
         List<AssociationDto> associations = Completion.join(
-                client.getFileAssociations(credentials, file.getId())
+                client.getFileAssociations(TestUtils.CREDENTIALS, file.getId())
         );
 
         assertTrue(
@@ -184,10 +176,10 @@ public class AssocationsClientIT {
                 associations.stream().anyMatch(f -> Objects.equals(f.getFileId(), file.getId()))
         );
 
-        Completion.join(client.deleteAssociation(credentials, file.getId(), BANK_TRANSACTION_ID));
+        Completion.join(client.deleteAssociation(TestUtils.CREDENTIALS, file.getId(), BANK_TRANSACTION_ID));
 
         associations = Completion.join(
-                client.getFileAssociations(credentials, file.getId())
+                client.getFileAssociations(TestUtils.CREDENTIALS, file.getId())
         );
 
         assertFalse(
