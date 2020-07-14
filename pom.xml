@@ -5,7 +5,7 @@
 
     <groupId>com.xama</groupId>
     <artifactId>xama-xero-client</artifactId>
-    <version>0.18.45.0</version>
+    <version>20.26.0</version>
     <packaging>jar</packaging>
 
     <name>Xama Xero Client</name>
@@ -22,6 +22,7 @@
         <jackson.kotlin.version>2.9.2</jackson.kotlin.version>
         <junit.version>4.12</junit.version>
         <riptide.version>2.8.1</riptide.version>
+        <logbook.version>1.8.1</logbook.version>
     </properties>
 
     <dependencies>
@@ -110,13 +111,13 @@
         <dependency>
             <groupId>org.zalando</groupId>
             <artifactId>logbook-core</artifactId>
-            <version>LATEST</version>
+            <version>${logbook.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.zalando</groupId>
             <artifactId>logbook-httpclient</artifactId>
-            <version>LATEST</version>
+            <version>${logbook.version}</version>
             <scope>test</scope>
         </dependency>
 

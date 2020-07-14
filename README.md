@@ -43,10 +43,8 @@ endpoints can be accessed with the client.
 
 ### HTTP Client
 
-The `Associations` and the `Files` related client requires a `Config`
-as well as a [Zalando Riptide](https://github.com/zalando/riptide) HTTP
-client instance. Please consider the
-[Zalando Riptide documentation](https://github.com/zalando/riptide#configuration)
+The `Associations` and the `Files` related client requires a [Zalando Riptide](https://github.com/zalando/riptide) HTTP
+client instance. Please consider the [Zalando Riptide documentation](https://github.com/zalando/riptide#configuration)
 for its configuration. The `Xama Xero Client` provides utility methods to apply the required settings:
 
 ```java
@@ -62,193 +60,6 @@ final Http http = ConfigUtilsKt.configureHttp(
 ```
 
 
-### Public App
-
-**Kotlin**:
-```kotlin
-Config.getPublicAppConfig(
-    consumerKey = "<ConsumerKey>",
-    consumerSecret = "<ConsumerSecret>"
-)
-```
-
-**Java**:
-```java
-Config.Companion.getPublicAppConfig(
-    "<ConsumerKey>",
-    "<ConsumerSecret>",
-    "My-Fancy-User-Agent"
-);
-```
-
-
-### Private App
-
-**Kotlin**:
-```kotlin
-Config.getPrivateAppConfig(
-        consumerKey = "<ConsumerKey>",
-        consumerSecret = "<ConsumerSecret>",
-        urlToPrivateKeyCert = URL("file:///tmp/public_privatekey.pfx"),
-        privateKeyPassword = "<PrivateKeyPassword>"
-)
-
-// or
-
-Config.getPrivateAppConfig(
-        consumerKey = "<ConsumerKey>",
-        consumerSecret = "<ConsumerSecret>",
-        privateKeyStream = Config::class.java.getResourceAsStream("/public_privatekey.pfx"),
-        privateKeyPassword = "<PrivateKeyPassword>"
-)
-```
-
-**Java**:
-```java
-Config.Companion.getPrivateAppConfig(
-    "<ConsumerKey>",
-    "<ConsumerSecret>",
-    new URL("file:///tmp/public_privatekey.pfx"),
-    "<PrivateKeyPassword>",
-    "My-Fancy-User-Agent"
-);
-
-// or
-
-Config.Companion.getPrivateAppConfig(
-    "<ConsumerKey>",
-    "<ConsumerSecret>",
-    Config.class.getResourceAsStream("/public_privatekey.pfx"),
-    "<PrivateKeyPassword>",
-    "My-Fancy-User-Agent"
-);
-```
-
-
-### Partner App
-
-**Kotlin**:
-```kotlin
-Config.getPartnerAppConfig(
-    consumerKey = "<ConsumerKey>",
-    consumerSecret = "<ConsumerSecret>",
-    urlToPrivateKeyCert = URL("file:///tmp/public_privatekey.pfx"),
-    privateKeyPassword = "<PrivateKeyPassword>",
-    userAgent = "My-Fancy-User-Agent"
-);
-
-// or
-
-Config.getPartnerAppConfig(
-    consumerKey = "<ConsumerKey>",
-    consumerSecret = "<ConsumerSecret>",
-    privateKeyStream = Config::class.java.getResourceAsStream("/public_privatekey.pfx"),
-    privateKeyPassword = "<PrivateKeyPassword>",
-    userAgent = "My-Fancy-User-Agent"
-);
-```
-
-**Java**:
-```java
-Config.Companion.getPartnerAppConfig(
-    "<ConsumerKey>",
-    "<ConsumerSecret>",
-    new URL("file:///tmp/public_privatekey.pfx"),
-    "<PrivateKeyPassword>",
-    "My-Fancy-User-Agent"
-);
-
-// or
-
-Config.Companion.getPartnerAppConfig(
-    "<ConsumerKey>",
-    "<ConsumerSecret>",
-    Config.class.getResourceAsStream("/public_privatekey.pfx"),
-    "<PrivateKeyPassword>",
-    "My-Fancy-User-Agent"
-);
-```
-
-### Credentials Provider
-
-You can specify Lambda object as Credentials Provider in the `Config` in order to fetch the
-OAuth credentials when a client method is executed. This might be useful
-for fetching possibly refreshed tokens e.g. from a DB. Please note that
-a `Credentials Provider` is not mandatory. However, if it is not specified,
-a `Credentials` object must be passed in each client method call.
-
-
-#### WITH Credentials Provider
-
-**Kotlin**:
-```kotlin
-    Config.getPublicAppConfig(
-            consumerKey = "<ConsumerKey>",
-            consumerSecret = "<ConsumerSecret>",
-            credentialsProvider = {
-                Credentials(
-                        token="<token>",
-                        tokenSecret="<tokenSecret>"
-                )
-            }
-    )
-```
-
-**Java**:
-```java
-Config.Companion.getPublicAppConfig(
-    "<ConsumerKey>",
-    "<ConsumerSecret>",
-    "My-Fancy-User-Agent",
-    () -> new Credentials("<token>", "<tokenSecret>")
-);
-```
-
-**Client:**
-```java
-client.uploadFile("test.jpg", "file:///tmp/test.jpeg");
-```
-
-
-#### WITHOUT Credentials Provider
-
-**Kotlin**:
-```kotlin
-    Config.getPublicAppConfig(
-            consumerKey = "<ConsumerKey>",
-            consumerSecret = "<ConsumerSecret>"
-    )
-```
-
-**Java**:
-```java
-Config.Companion.getPublicAppConfig(
-    "<ConsumerKey>",
-    "<ConsumerSecret>",
-    "My-Fancy-User-Agent"
-);
-```
-
-**Client:**
-
-*Kotlin:*
-```kotlin
-client.uploadFile(
-    fileName = "test.jpg",
-    fileUrl = "file:///tmp/test.jpeg",
-    credentials = Credentials("token, "tokenSecret")
-)
-```
-
-*Java:*
-```java
-client.uploadFile("test.jpg", "file:///tmp/test.jpeg", new Credentials("token, "tokenSecret"));
-```
-
-**NOTE:** You can not specify a Credentials Provider in a  `Partner`
-App but you do not need to pass `Credentials` to a client call.
-
-
 ## Usage
 
 ```java
@@ -261,23 +72,18 @@ final Http http = ConfigUtilsKt.configureHttp(
 )
 .build();
 
-final Config config = Config.Companion.getPublicAppConfig(
-   "<ConsumerKey>",
-   "<ConsumerSecret>",
-   "My-Fancy-User-Agent",
-   () -> new Credentials("<token>", "<tokenSecret>")
-);
 
-final Files.Client client = new Files.Client(http, config);
+final FilesClient client = new FilesClient(http);
 
-final Credentials credentials = new Credentials("<token>", "<tokenSecret>");
+final Credentials credentials = new Credentials("<accessToken>", tenantId, "myUserAgent");
 
-final CompletableFuture<Files.FileDto> future = client.uploadFile("test.jpg", "file:///tmp/test.jpeg");
-final Files.FileDto file = Completion.join(future);
+final CompletableFuture<FileDto> future = client.uploadFile(credentials, "test.jpg", "file:///tmp/test.jpeg");
+final FileDto file = Completion.join(future);
 
 
-final Associations.Client associationsClient = new Associations.Client(http, config);
+final AssociationsClient associationsClient = new AssociationsClient(http);
 Completion.join(associationsClient.createAssociation(
+    credentials,
     file.getId(),
     UUID.fromString("193FDBDA-4738-4AEA-8382-DFAF32F819B0"), // Xero Bank Transaction Id
     Associations.ObjectGroup.BANKTRANSACTION
