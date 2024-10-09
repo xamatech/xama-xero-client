@@ -10,8 +10,8 @@ public final class TestUtils {
     private TestUtils(){}
 
     public static Credentials CREDENTIALS = new Credentials(
-            "<access token>",
-            UUID.fromString("1D91B189-C36F-4BB4-BD97-BB7E856254CB"), // org id
+            "eyJhbGciOiJSUzI1NiIsImtpZCI6IjFDQUY4RTY2NzcyRDZEQzAyOEQ2NzI2RkQwMjYxNTgxNTcwRUZDMTkiLCJ0eXAiOiJKV1QiLCJ4NXQiOiJISy1PWm5jdGJjQW8xbkp2MENZVmdWY09fQmsifQ.eyJuYmYiOjE3Mjg0ODIwMDAsImV4cCI6MTcyODQ4MzgwMCwiaXNzIjoiaHR0cHM6Ly9pZGVudGl0eS54ZXJvLmNvbSIsImF1ZCI6Imh0dHBzOi8vaWRlbnRpdHkueGVyby5jb20vcmVzb3VyY2VzIiwiY2xpZW50X2lkIjoiRDA3NTc0NjE1MEE2NDE5QkFCNURFQjU2NDhBNTUyOTEiLCJzdWIiOiJkZTQ4MzlmNjVlNzk1ODMxOWNmYjVlYTdmODMxN2JhZSIsImF1dGhfdGltZSI6MTcyODQ4MTgzMCwieGVyb191c2VyaWQiOiJjNTQxNmY2Ni0xZjcwLTQ5YjEtYmUxYy03MzkyYmEyOGIwYTMiLCJnbG9iYWxfc2Vzc2lvbl9pZCI6ImQwNGYyMmEwYjhlMDRkYzE4M2JlNmE4YjUwOWM4ZWM1Iiwic2lkIjoiZDA0ZjIyYTBiOGUwNGRjMTgzYmU2YThiNTA5YzhlYzUiLCJqdGkiOiI1OEU1MkY1RTM4RUI3NzJBRjUyM0JDQzQwQ0U4QTYyQSIsImF1dGhlbnRpY2F0aW9uX2V2ZW50X2lkIjoiNjJkOGFiMjctYzVjOS00NjcxLWFlYmEtNWMwMDI5NDk1YmFkIiwic2NvcGUiOlsiZW1haWwiLCJvcGVuaWQiLCJhY2NvdW50aW5nLnJlcG9ydHMucmVhZCIsImZpbGVzIiwiYWNjb3VudGluZy5zZXR0aW5ncyIsImFjY291bnRpbmcuYXR0YWNobWVudHMiLCJhY2NvdW50aW5nLnRyYW5zYWN0aW9ucyIsImFjY291bnRpbmcuam91cm5hbHMucmVhZCIsImFjY291bnRpbmcuY29udGFjdHMiLCJvZmZsaW5lX2FjY2VzcyJdLCJhbXIiOlsibGVnYWN5Il19.GIx9QRLw9lgspgKBBg7F15GMS2t6JdriyhzRK6cdltKb9DBJsQH4lRa5Q6TV_hXyXqW0VzfQS01MQPVSECwoWUWRAN1UyzSZea5EmzDeFN2451tAScm56fBoVuY-OluRXhG0Q_LxlSjTMNMbyJZ7uZjabT4yMZ1lA-qmL3atFrkwMd0GXb8Z_w3SP1olDcd7h9fgc-foawbw_Ird5IAeIkYwqlCGl8gYg8MQMlW_SAv4iY0NZDa0hy5qQIvL7ggiMUZvzRaHs4lKpcmaBO-zapIEBB9CrYGhkJpKWoZcPkzVYa_A5Y57nzNtHS9gOMApnnMVTXI9Ns0_GePxpN41nA",
+            UUID.fromString("e57140f7-cb25-479b-8cd1-83c078c39ddc"), // org id
             "xama-xero-client-test"
     );
 
@@ -19,4 +19,5 @@ public final class TestUtils {
         return ByteStreams.toByteArray(FilesClientIT.class.getResourceAsStream(filePathInClassPath));
     }
 
+    // 1a6d04e5-6950-4b17-9607-bf0d77058012
 }
