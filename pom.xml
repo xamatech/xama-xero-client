@@ -15,13 +15,13 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
-        <kotlin.version>1.2.61</kotlin.version>
+        <kotlin.version>1.8.10</kotlin.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
 
         <jackson.kotlin.version>2.9.2</jackson.kotlin.version>
         <junit.version>4.12</junit.version>
-        <riptide.version>2.8.1</riptide.version>
+        <riptide.version>3.3.0</riptide.version>
         <logbook.version>1.8.1</logbook.version>
     </properties>
 
@@ -32,6 +32,11 @@
             <version>1.19.1</version>
         </dependency>
 
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.1.1</version>
+        </dependency>
 
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
@@ -78,11 +83,11 @@
             <artifactId>riptide-faults</artifactId>
             <version>${riptide.version}</version>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>org.zalando</groupId>
             <artifactId>riptide-timeout</artifactId>
             <version>${riptide.version}</version>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>org.zalando</groupId>
             <artifactId>riptide-problem</artifactId>
