@@ -83,9 +83,9 @@ class FilesClient(private val http: Http) {
 
         val capture = Capture.empty<GetFilesResponseDto>()
         return http.get(BASE_URL)
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .accept(MediaType.APPLICATION_JSON_UTF8)
                 .queryParams(queryParams)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
                 .headers(credentials.toHttpHeaders())
                 .dispatch(Navigators.series(),
                         Bindings.on(HttpStatus.Series.SUCCESSFUL).call(GetFilesResponseDto::class.java, capture),
@@ -100,8 +100,8 @@ class FilesClient(private val http: Http) {
         val capture = Capture.empty<FileDto>()
 
         return http.get(requestUrl)
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
                 .headers(credentials.toHttpHeaders())
                 .dispatch(Navigators.series(),
                         Bindings.on(HttpStatus.Series.SUCCESSFUL).call(FileDto::class.java, capture),
@@ -135,7 +135,7 @@ class FilesClient(private val http: Http) {
         val capture = Capture.empty<FileDto>()
         return http.post(BASE_URL)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
-                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .accept(MediaType.APPLICATION_JSON)
                 .headers(credentials.toHttpHeaders())
                 .body(multiValueMap)
                 .dispatch(Navigators.series(),
@@ -160,8 +160,8 @@ class FilesClient(private val http: Http) {
         val capture = Capture.empty<FileDto>()
 
         return http.put(requestUrl)
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
                 .headers(credentials.toHttpHeaders())
                 .body(FileChangeDto(name = newFileName, folderId = newFolderId))
                 .dispatch(Navigators.series(),
@@ -177,8 +177,8 @@ class FilesClient(private val http: Http) {
         val capture = Capture.empty<Void>()
 
         return http.delete(requestUrl)
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
                 .headers(credentials.toHttpHeaders())
                 .dispatch(Navigators.series(),
                         Bindings.on(HttpStatus.Series.SUCCESSFUL).call(Void::class.java, capture),

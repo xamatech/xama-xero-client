@@ -1,22 +1,19 @@
 package com.xama;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xama.client.ConfigUtilsKt;
 import com.xama.client.files.*;
 import kotlin.Pair;
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.xml.Jaxb2RootElementHttpMessageConverter;
 import org.springframework.scheduling.concurrent.ConcurrentTaskExecutor;
 import org.zalando.logbook.Logbook;
 import org.zalando.logbook.RawRequestFilter;
 import org.zalando.logbook.StreamHttpLogWriter;
-import org.zalando.logbook.httpclient.LogbookHttpRequestInterceptor;
 import org.zalando.riptide.Http;
-import org.zalando.riptide.capture.Completion;
-import org.zalando.riptide.httpclient.RestAsyncClientHttpRequestFactory;
+import org.zalando.riptide.OriginalStackTracePlugin;
 
 import java.util.List;
 import java.util.Objects;
@@ -34,34 +31,7 @@ public class AssocationsClientIT {
 
     @Before
     public void setup() {
-        final Logbook logbook = Logbook.builder()
-                .clearBodyFilters()
-                .clearHeaderFilters()
-                .clearRawRequestFilters()
-                .rawRequestFilter(RawRequestFilter.none())
-                .clearRawResponseFilters()
-                .clearRequestFilters()
-                .writer(new StreamHttpLogWriter(System.err))
-                .build();
-
-        final HttpClient httpClient = HttpClientBuilder.create()
-                // TODO configure client here
-                .addInterceptorFirst(new LogbookHttpRequestInterceptor(logbook))
-                .build();
-
-        final ConcurrentTaskExecutor executor = new ConcurrentTaskExecutor();
-
-        //------
-
-        final ObjectMapper objectMapper = ConfigUtilsKt.configureObjectMapper(new Jackson2ObjectMapperBuilder()).build();
-
-        final Http http = ConfigUtilsKt.configureHttp(
-                Http.builder().requestFactory(
-                        new RestAsyncClientHttpRequestFactory(httpClient, executor)),
-                        objectMapper
-        )
-        .build();
-
+        final Http http = ConfigUtilsKt.configureHttp();
 
         client = new AssociationsClient(http);
         filesClient = new FilesClient(http);
@@ -70,22 +40,22 @@ public class AssocationsClientIT {
 
     @org.junit.Test
     public void testCreateAssociation() {
-        final GetFilesResponseDto filesResponse = Completion.join(filesClient.getFiles(
+        final GetFilesResponseDto filesResponse = filesClient.getFiles(
                 TestUtils.CREDENTIALS,
                 FilesClient.DEFAULT_PAGE_SIZE,
                 FilesClient.DEFAULT_PAGE,
                 new Pair<>(SortField.CREATED, SortDirection.DESC)
-        ));
+        ).join();
 
         List<FileDto> files = filesResponse.getItems();
         final FileDto sourceFile = files.get(0);
 
-        final AssociationDto association = Completion.join(client.createAssociation(
+        final AssociationDto association = client.createAssociation(
                 TestUtils.CREDENTIALS,
                 sourceFile.getId(),
                 BANK_TRANSACTION_ID,
                 ObjectGroup.BANKTRANSACTION
-        ));
+        ).join();
 
         assertEquals("wrong file id", sourceFile.getId(), association.getFileId());
         assertEquals("wrong object id", BANK_TRANSACTION_ID, association.getObjectId());
@@ -96,27 +66,29 @@ public class AssocationsClientIT {
 
     @Test
     public void testGetFileAssociations() {
-        final GetFilesResponseDto filesResponse = Completion.join(filesClient.getFiles(
+        final GetFilesResponseDto filesResponse = filesClient.getFiles(
                 TestUtils.CREDENTIALS,
                 FilesClient.DEFAULT_PAGE_SIZE,
                 FilesClient.DEFAULT_PAGE,
                 new Pair<>(SortField.CREATED, SortDirection.DESC)
-        ));
+        ).join();
 
         List<FileDto> files = filesResponse.getItems();
         final FileDto sourceFile = files.get(0);
 
-        final AssociationDto association = Completion.join(client.createAssociation(
+        final AssociationDto association = client.createAssociation(
                 TestUtils.CREDENTIALS,
                 sourceFile.getId(),
                 BANK_TRANSACTION_ID,
                 ObjectGroup.BANKTRANSACTION
-        ));
+        ).join();
 
 
-        final List<AssociationDto> associations = Completion.join(
-                client.getFileAssociations(TestUtils.CREDENTIALS, sourceFile.getId())
-        );
+        final List<AssociationDto> associations = client.getFileAssociations(
+                TestUtils.CREDENTIALS,
+                sourceFile.getId()
+        ).join();
+
         assertNotNull("list of retrieved associations must not be null", associations);
         assertEquals("expected 1 association", 1, associations.size());
         assertEquals("wrong association", association, associations.get(0));
@@ -125,27 +97,28 @@ public class AssocationsClientIT {
 
     @Test
     public void testGetObjectAssociations() {
-        final GetFilesResponseDto filesResponse = Completion.join(filesClient.getFiles(
+        final GetFilesResponseDto filesResponse = filesClient.getFiles(
                 TestUtils.CREDENTIALS,
                 FilesClient.DEFAULT_PAGE_SIZE,
                 FilesClient.DEFAULT_PAGE,
                 new Pair<>(SortField.CREATED, SortDirection.DESC)
-        ));
+        ).join();
 
         List<FileDto> files = filesResponse.getItems();
         final FileDto sourceFile = files.get(0);
 
-        final AssociationDto association = Completion.join(client.createAssociation(
+        final AssociationDto association = client.createAssociation(
                 TestUtils.CREDENTIALS,
                 sourceFile.getId(),
                 BANK_TRANSACTION_ID,
                 ObjectGroup.BANKTRANSACTION
-        ));
+        ).join();
 
 
-        final List<AssociationDto> associations = Completion.join(
-                client.getObjectAssociations(TestUtils.CREDENTIALS, BANK_TRANSACTION_ID)
-        );
+        final List<AssociationDto> associations = client.getObjectAssociations(
+                TestUtils.CREDENTIALS,
+                BANK_TRANSACTION_ID
+        ).join();
         assertNotNull("list of retrieved associations must not be null", associations);
         assertEquals("expected 1 association", 1, associations.size());
         assertEquals("wrong association", association, associations.get(0));
@@ -154,33 +127,29 @@ public class AssocationsClientIT {
 
     @Test
     public void testDeleteAssociation() throws Exception {
-        final FileDto file = Completion.join(filesClient.uploadFile(
+        final FileDto file = filesClient.uploadFile(
                 TestUtils.CREDENTIALS,
                 "testDeleteAssociation.jpg",
                 TestUtils.toByteArray("/test.jpg")
-        ));
+        ).join();
 
-        Completion.join(client.createAssociation(
+        client.createAssociation(
                 TestUtils.CREDENTIALS,
                 file.getId(),
                 BANK_TRANSACTION_ID,
                 ObjectGroup.BANKTRANSACTION
-        ));
+        ).join();
 
-        List<AssociationDto> associations = Completion.join(
-                client.getFileAssociations(TestUtils.CREDENTIALS, file.getId())
-        );
+        List<AssociationDto> associations = client.getFileAssociations(TestUtils.CREDENTIALS, file.getId()).join();
 
         assertTrue(
                 "association was not created",
                 associations.stream().anyMatch(f -> Objects.equals(f.getFileId(), file.getId()))
         );
 
-        Completion.join(client.deleteAssociation(TestUtils.CREDENTIALS, file.getId(), BANK_TRANSACTION_ID));
+        client.deleteAssociation(TestUtils.CREDENTIALS, file.getId(), BANK_TRANSACTION_ID).join();
 
-        associations = Completion.join(
-                client.getFileAssociations(TestUtils.CREDENTIALS, file.getId())
-        );
+        associations = client.getFileAssociations(TestUtils.CREDENTIALS, file.getId()).join();
 
         assertFalse(
                 "association was not deleted",
