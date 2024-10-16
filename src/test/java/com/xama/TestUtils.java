@@ -10,13 +10,12 @@ public final class TestUtils {
     private TestUtils(){}
 
     public static Credentials CREDENTIALS = new Credentials(
-            "<access token>",
-            UUID.fromString("1D91B189-C36F-4BB4-BD97-BB7E856254CB"), // org id
+            "<access_token>",
+            UUID.fromString("e57140f7-cb25-479b-8cd1-83c078c39ddc"), // org id
             "xama-xero-client-test"
     );
 
     public static byte[] toByteArray(final String filePathInClassPath) throws IOException {
         return ByteStreams.toByteArray(FilesClientIT.class.getResourceAsStream(filePathInClassPath));
     }
-
 }

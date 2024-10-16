@@ -93,8 +93,8 @@ class AssociationsClient(private val http: Http) {
     private fun getAssociations(credentials: Credentials, requestUrl: String): CompletableFuture<List<AssociationDto>> {
         val capture = Capture.empty<List<AssociationDto>>()
         return http.get(requestUrl)
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
                 .headers(credentials.toHttpHeaders())
                 .dispatch(Navigators.series(),
                         Bindings.on(HttpStatus.Series.SUCCESSFUL).call(Types.listOf(AssociationDto::class.java), capture),
@@ -119,8 +119,8 @@ class AssociationsClient(private val http: Http) {
         val requestUrl = "https://api.xero.com/files.xro/1.0/files/$fileId/associations"
         val capture = Capture.empty<AssociationDto>()
         return http.post(requestUrl, fileId)
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
                 .headers(credentials.toHttpHeaders())
                 .body(CreateAssociationDto(objectId = objectId, objectGroup = objectGroup))
                 .dispatch(Navigators.series(),
@@ -135,8 +135,8 @@ class AssociationsClient(private val http: Http) {
         val capture = Capture.empty<Void>()
         val requestUrl = "https://api.xero.com/files.xro/1.0/files/$fileId/associations/$objectId"
         return http.delete(requestUrl)
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
                 .headers(credentials.toHttpHeaders())
                 .dispatch(Navigators.series(),
                         Bindings.on(HttpStatus.Series.SUCCESSFUL).call(Void::class.java, capture),
