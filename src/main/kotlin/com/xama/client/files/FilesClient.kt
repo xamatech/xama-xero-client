@@ -146,30 +146,6 @@ class FilesClient(private val http: Http) {
     }
 
 
-    fun uploadFile2(credentials: Credentials, fileName: String, bytes: ByteArray): CompletableFuture<Any> {
-        val resourceHeaders = HttpHeaders();
-        resourceHeaders.contentType = MediaType.parseMediaType(tika.detect(fileName))
-
-        val resource = ExtendedResource(fileName, bytes)
-        val fileEntity = HttpEntity(resource, resourceHeaders)
-
-        val multiValueMap = LinkedMultiValueMap<String, Any>()
-        multiValueMap[fileName] = fileEntity
-
-        val capture = Capture.empty<Any>()
-        return http.post(BASE_URL)
-            .contentType(MediaType.MULTIPART_FORM_DATA)
-            .accept(MediaType.APPLICATION_JSON)
-            .headers(credentials.toHttpHeaders())
-            .body(multiValueMap)
-            .dispatch(Navigators.series(),
-                Bindings.on(HttpStatus.Series.SUCCESSFUL).call(Any::class.java, capture),
-                Bindings.anySeries().call(ProblemRoute.problemHandling(Route.call { p -> handleProblem(p) }))
-            )
-            .thenApply(capture)
-    }
-
-
     fun changeFile(
             credentials: Credentials,
             fileId: UUID,
