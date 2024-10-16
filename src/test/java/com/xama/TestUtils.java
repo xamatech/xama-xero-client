@@ -10,7 +10,7 @@ public final class TestUtils {
     private TestUtils(){}
 
     public static Credentials CREDENTIALS = new Credentials(
-            "<access-token>",
+            "<access_token>",
             UUID.fromString("e57140f7-cb25-479b-8cd1-83c078c39ddc"), // org id
             "xama-xero-client-test"
     );
